@@ -1,12 +1,50 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
+import Dashboard from "@/components/Dashboard";
+import LoginModal from "@/components/LoginModal";
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+
+  const handleLogin = (email: string) => {
+    setUserEmail(email);
+    setIsLoggedIn(true);
+    setShowLogin(false);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserEmail("");
+  };
+
+  if (isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header 
+          isLoggedIn={true}
+          onMenuClick={handleLogout}
+        />
+        <Dashboard userEmail={userEmail} />
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header 
+        onLogin={() => setShowLogin(true)}
+        isLoggedIn={false}
+      />
+      <Hero onGetStarted={() => setShowLogin(true)} />
+      
+      <LoginModal 
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onLogin={handleLogin}
+      />
     </div>
   );
 };
