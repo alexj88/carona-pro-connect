@@ -72,12 +72,14 @@ const Hero = ({ onGetStarted }: HeroProps) => {
               Começar Agora
             </Button>
             <Button 
-              variant="outline" 
-              size="lg"
-              className="text-lg px-8 py-6 border-white/30 text-white hover:bg-white/10"
+            variant="outline" 
+            size="lg"
+            className="text-lg px-8 py-6 border-white/30 text-gray-600 hover:bg-white/10"
             >
-              Saiba Mais
+
+            Saiba Mais
             </Button>
+
           </div>
         </div>
       </div>
