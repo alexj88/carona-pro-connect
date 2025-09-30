@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Car, Menu, User } from "lucide-react";
-import appIcon from "@/assets/app-icon.jpg";
+import appIcon from "@/assets/app-icon.png";
 
 interface HeaderProps {
   onLogin?: () => void;
