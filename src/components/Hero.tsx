@@ -71,24 +71,11 @@ const Hero = ({ onGetStarted }: HeroProps) => {
             >
               Começar Agora
             </Button>
-            <Button 
-            variant="outline" 
-            size="lg"
-            className="text-lg px-8 py-6 border-white/30 text-gray-600 hover:bg-white/10"
-            >
-
-            Saiba Mais
-            </Button>
 
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-float">
-        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-pulse" />
-        </div>
-      </div>
     </section>
   );
 };
