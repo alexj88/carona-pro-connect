@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Car, Menu, User } from "lucide-react";
+import { useState } from "react";
 import appIcon from "@/assets/app-icon.png";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Link } from "react-router-dom";
@@ -14,6 +15,7 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
   const handleLogout = () => {
     window.location.href = "/";
   };
+  const [status, setStatus] = useState<string>("Online");
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -54,7 +56,16 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                     </div>
                     <div className="w-full border-t my-2" />
                     <Link to="/profile" className="text-sm text-primary hover:underline">Editar perfil</Link>
-                    <span className="text-xs text-green-600">Status: Online</span>
+                    <div className="relative">
+                      <button className="text-xs text-green-600 underline" onClick={() => {}}>
+                        Status: {status}
+                      </button>
+                      <div className="absolute right-0 mt-1 w-40 bg-popover border rounded-md shadow-md p-2">
+                        <button className="w-full text-left px-2 py-1 hover:bg-muted" onClick={() => setStatus("Online")}>Online</button>
+                        <button className="w-full text-left px-2 py-1 hover:bg-muted" onClick={() => setStatus("Passageiro")}>Passageiro</button>
+                        <button className="w-full text-left px-2 py-1 hover:bg-muted" onClick={() => setStatus("Usuário")}>Usuário</button>
+                      </div>
+                    </div>
                     <div className="w-full border-t my-2" />
                     <div className="w-full">
                       <span className="font-semibold text-sm mb-1 block">Histórico de Caronas</span>

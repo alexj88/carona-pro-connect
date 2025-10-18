@@ -18,6 +18,9 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
+  const [role, setRole] = useState("");
+  const [department, setDepartment] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +33,8 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (email && name) {
+      // Por enquanto apenas logamos os dados; integrar com backend quando disponível
+      console.log("Registro:", { name, email, company, role, department, photo });
       onLogin(email);
       onClose();
     }
@@ -168,6 +173,47 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
                         required
                       />
                     </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Cargo</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="role"
+                        type="text"
+                        placeholder="Ex: Analista Sênior"
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Setor</Label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="department"
+                        type="text"
+                        placeholder="Ex: Tecnologia"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="photo">Foto (opcional)</Label>
+                    <input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setPhoto(e.target.files ? e.target.files[0] : null)}
+                      className="w-full text-sm text-foreground"
+                    />
                   </div>
                   
                   <div className="space-y-2">
