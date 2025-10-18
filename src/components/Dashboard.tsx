@@ -21,8 +21,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     {
       id: "1",
       driverName: "Ana Silva",
-      from: "Alphaville",
-      to: "Faria Lima",
+      from: "Recife",
+      to: "Cidade Universitária",
       time: "08:00",
       date: "18/09",
       availableSeats: 2,
@@ -35,8 +35,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     {
       id: "2",
       driverName: "Carlos Santos",
-      from: "Vila Olímpia",
-      to: "Brooklin",
+      from: "Caxangá",
+      to: "Graças",
       time: "18:30",
       date: "18/09",
       availableSeats: 1,
@@ -48,8 +48,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     {
       id: "3",
       driverName: "Mariana Costa",
-      from: "Pinheiros",
-      to: "Vila Madalena",
+      from: "Boa Viagem",
+      to: "Madalena",
       time: "07:45",
       date: "19/09",
       availableSeats: 3,

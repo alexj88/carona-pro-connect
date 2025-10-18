@@ -59,9 +59,9 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                     <div className="w-full">
                       <span className="font-semibold text-sm mb-1 block">Histórico de Caronas</span>
                       <ul className="text-xs space-y-1">
-                        <li>12/09/2025 - São Paulo → Alphaville</li>
-                        <li>05/09/2025 - Alphaville → São Paulo</li>
-                        <li>28/08/2025 - São Paulo → Alphaville</li>
+                        <li>12/09/2025 - Recife → Graças</li>
+                        <li>05/09/2025 - Graças → Recife</li>
+                        <li>28/08/2025 - Recife → Graças</li>
                         <li className="text-muted-foreground">...mais</li>
                       </ul>
                     </div>
