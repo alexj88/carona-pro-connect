@@ -3,41 +3,92 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { MapPin, Clock, Users, DollarSign, Calendar } from "lucide-react";
+import RideCard from "./RideCard";
 
 interface CreateRideModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateRide: (rideData: any) => void;
+  onCreateRide: (rideData: {
+    from: string;
+    to: string;
+    time: string;
+    date: string;
+    seats: number;
+    price: number;
+    description: string;
+    group: string;
+    isRecurring: boolean;
+    allowSmoking: boolean;
+    hasAirConditioning: boolean;
+    acceptsPets: boolean;
+  }) => void;
 }
 
-const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps) => {
+const CreateRideModal = ({
+  isOpen,
+  onClose,
+  onCreateRide,
+}: CreateRideModalProps) => {
   const [formData, setFormData] = useState({
     from: "",
     to: "",
     date: "",
     time: "",
-    seats: "3",
+    availableSeats: "", // ✅ Corrigido o typo
     price: "",
     description: "",
     group: "",
     isRecurring: false,
     allowSmoking: false,
     hasAirConditioning: true,
-    acceptsPets: false
+    acceptsPets: false,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreateRide(formData);
+    const rideData = {
+      from: formData.from,
+      to: formData.to,
+      time: formData.time,
+      date: formData.date,
+      seats: parseInt(formData.availableSeats) || 0, // ✅ Agora com nome correto
+      price: parseFloat(formData.price) || 0,
+      description: formData.description,
+      group: formData.group,
+      isRecurring: formData.isRecurring,
+      allowSmoking: formData.allowSmoking,
+      hasAirConditioning: formData.hasAirConditioning,
+      acceptsPets: formData.acceptsPets,
+    };
+
+    onCreateRide(rideData); // ✅ Agora passando rideData convertido
   };
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -67,7 +118,7 @@ const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps
                   <Label htmlFor="from">Origem</Label>
                   <Input
                     id="from"
-                    placeholder="Ex: Alphaville, Barueri"
+                    placeholder="Ex: Várzea, Recife"
                     value={formData.from}
                     onChange={(e) => handleInputChange("from", e.target.value)}
                     required
@@ -77,7 +128,7 @@ const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps
                   <Label htmlFor="to">Destino</Label>
                   <Input
                     id="to"
-                    placeholder="Ex: Faria Lima, São Paulo"
+                    placeholder="Ex: Madalena, Recife"
                     value={formData.to}
                     onChange={(e) => handleInputChange("to", e.target.value)}
                     required
@@ -118,14 +169,18 @@ const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Switch
                   id="recurring"
                   checked={formData.isRecurring}
-                  onCheckedChange={(checked) => handleInputChange("isRecurring", checked)}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("isRecurring", checked)
+                  }
                 />
-                <Label htmlFor="recurring">Carona recorrente (mesmo horário diariamente)</Label>
+                <Label htmlFor="recurring">
+                  Carona recorrente (mesmo horário diariamente)
+                </Label>
               </div>
             </CardContent>
           </Card>
@@ -142,7 +197,12 @@ const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="seats">Vagas disponíveis</Label>
-                  <Select value={formData.seats} onValueChange={(value) => handleInputChange("seats", value)}>
+                  <Select
+                    value={formData.availableSeats} // ✅ Agora com nome correto
+                    onValueChange={(value) =>
+                      handleInputChange("availableSeats", value)
+                    } // ✅ Corrigido para "availableSeats"
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -155,19 +215,22 @@ const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="group">Grupo/Área</Label>
-                  <Select value={formData.group} onValueChange={(value) => handleInputChange("group", value)}>
+                  <Select
+                    value={formData.group}
+                    onValueChange={(value) => handleInputChange("group", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um grupo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="consulting">Consulting</SelectItem>
-                      <SelectItem value="strategy">Strategy</SelectItem>
+                      <SelectItem value="Tecnologia">Tecnologia</SelectItem>
+                      <SelectItem value="consultoria">Consultoria</SelectItem>
+                      <SelectItem value="strategy">Estratégia</SelectItem>
                       <SelectItem value="design">Design</SelectItem>
-                      <SelectItem value="operations">Operations</SelectItem>
+                      <SelectItem value="operations">Operações</SelectItem>
                       <SelectItem value="general">Geral</SelectItem>
                     </SelectContent>
                   </Select>
@@ -205,25 +268,31 @@ const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps
                   <Switch
                     id="aircon"
                     checked={formData.hasAirConditioning}
-                    onCheckedChange={(checked) => handleInputChange("hasAirConditioning", checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("hasAirConditioning", checked)
+                    }
                   />
                   <Label htmlFor="aircon">Ar condicionado</Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="smoking"
                     checked={formData.allowSmoking}
-                    onCheckedChange={(checked) => handleInputChange("allowSmoking", checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("allowSmoking", checked)
+                    }
                   />
                   <Label htmlFor="smoking">Permite fumantes</Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="pets"
                     checked={formData.acceptsPets}
-                    onCheckedChange={(checked) => handleInputChange("acceptsPets", checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("acceptsPets", checked)
+                    }
                   />
                   <Label htmlFor="pets">Aceita pets</Label>
                 </div>
@@ -245,7 +314,12 @@ const CreateRideModal = ({ isOpen, onClose, onCreateRide }: CreateRideModalProps
 
           {/* Botões */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
               Cancelar
             </Button>
             <Button type="submit" variant="gradient" className="flex-1">

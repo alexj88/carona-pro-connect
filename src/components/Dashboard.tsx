@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import RideCard from "./RideCard";
@@ -29,8 +35,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       totalSeats: 4,
       rating: 4.8,
       price: 15.0,
-      group: "Technology",
-      tags: ["Regular", "Não fumante"]
+      group: "Tecnologia",
+      tags: ["Regular", "Não fumante"],
     },
     {
       id: "2",
@@ -42,8 +48,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       availableSeats: 1,
       totalSeats: 3,
       rating: 4.9,
-      group: "Consulting",
-      tags: ["Ar condicionado", "Música"]
+      group: "Consultoria",
+      tags: ["Ar condicionado", "Música"],
     },
     {
       id: "3",
@@ -56,16 +62,16 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       totalSeats: 4,
       rating: 4.7,
       price: 12.0,
-      group: "Strategy",
-      tags: ["Pontual", "Conversa"]
-    }
+      group: "Estratégia",
+      tags: ["Pontual", "Conversa"],
+    },
   ];
 
   const mockGroups = [
-    { name: "Technology", members: 234, rides: 45 },
-    { name: "Consulting", members: 189, rides: 32 },
-    { name: "Strategy", members: 156, rides: 28 },
-    { name: "Design", members: 98, rides: 18 }
+    { name: "Tecnologia", members: 234, rides: 45 },
+    { name: "Consultoria", members: 189, rides: 32 },
+    { name: "Estratégia", members: 156, rides: 28 },
+    { name: "Design", members: 98, rides: 18 },
   ];
 
   const handleJoinRide = (rideId: string) => {
@@ -73,10 +79,11 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     // Aqui seria implementada a lógica para solicitar participação na carona
   };
 
-  const filteredRides = mockRides.filter(ride =>
-    ride.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ride.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ride.driverName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRides = mockRides.filter(
+    (ride) =>
+      ride.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ride.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ride.driverName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -89,7 +96,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
               Bem-vindo ao Dashboard
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Encontre caronas disponíveis, crie novos grupos e conecte-se com sua equipe
+              Encontre caronas disponíveis, crie novos grupos e conecte-se com
+              sua equipe
             </p>
           </div>
 
@@ -98,13 +106,17 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
             <Card className="bg-gradient-card border-0">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-primary">24</div>
-                <div className="text-sm text-muted-foreground">Caronas Hoje</div>
+                <div className="text-sm text-muted-foreground">
+                  Caronas Hoje
+                </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card border-0">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-secondary">156</div>
-                <div className="text-sm text-muted-foreground">Usuários Ativos</div>
+                <div className="text-sm text-muted-foreground">
+                  Usuários Ativos
+                </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card border-0">
@@ -116,7 +128,9 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
             <Card className="bg-gradient-card border-0">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-primary">R$ 420</div>
-                <div className="text-sm text-muted-foreground">Economia Mensal</div>
+                <div className="text-sm text-muted-foreground">
+                  Economia Mensal
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -144,7 +158,10 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
                   <Filter className="h-4 w-4 mr-2" />
                   Filtros
                 </Button>
-                <Button variant="gradient" onClick={() => setShowCreateRide(true)}>
+                <Button
+                  variant="gradient"
+                  onClick={() => setShowCreateRide(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Carona
                 </Button>
@@ -153,7 +170,11 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
               {/* Rides Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRides.map((ride) => (
-                  <RideCard key={ride.id} ride={ride} onJoinRide={handleJoinRide} />
+                  <RideCard
+                    key={ride.id}
+                    ride={ride}
+                    onJoinRide={handleJoinRide}
+                  />
                 ))}
               </div>
 
@@ -173,11 +194,16 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
             <TabsContent value="groups" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {mockGroups.map((group, index) => (
-                  <Card key={index} className="bg-gradient-card border-0 hover:shadow-card transition-all duration-300">
+                  <Card
+                    key={index}
+                    className="bg-gradient-card border-0 hover:shadow-card transition-all duration-300"
+                  >
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span>{group.name}</span>
-                        <Badge variant="secondary">{group.members} membros</Badge>
+                        <Badge variant="secondary">
+                          {group.members} membros
+                        </Badge>
                       </CardTitle>
                       <CardDescription>
                         {group.rides} caronas ativas este mês
@@ -214,7 +240,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">
-                      Seu histórico aparecerá aqui conforme você participar de caronas
+                      Seu histórico aparecerá aqui conforme você participar de
+                      caronas
                     </p>
                   </div>
                 </CardContent>
@@ -224,8 +251,8 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
         </div>
       </div>
 
-      <CreateRideModal 
-        isOpen={showCreateRide} 
+      <CreateRideModal
+        isOpen={showCreateRide}
         onClose={() => setShowCreateRide(false)}
         onCreateRide={(rideData) => {
           console.log("Creating ride:", rideData);
