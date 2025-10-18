@@ -87,17 +87,7 @@ const RideCard = ({ ride, onJoinRide }: RideCardProps) => {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2">
-          {ride.price ? (
-            <div className="text-lg font-bold text-primary">
-              R$ {ride.price.toFixed(2)}
-            </div>
-          ) : (
-            <div className="text-sm text-success font-medium">
-              Gratuita
-            </div>
-          )}
-          
+        <div className="flex items-center justify-end pt-2">
           <Button 
             variant="gradient" 
             size="sm"

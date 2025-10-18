@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Car, Menu, User } from "lucide-react";
-import { useState } from "react";
+import { Car, Menu, User, Users } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import appIcon from "@/assets/app-icon.png";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Link } from "react-router-dom";
@@ -15,16 +15,39 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
   const handleLogout = () => {
     window.location.href = "/";
   };
-  const [status, setStatus] = useState<string>("Online");
+  // Default status is Passageiro; user can change to Motorista when needed
+  const [status, setStatus] = useState<string>("Passageiro");
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const statusMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!showStatusMenu) return;
+      if (statusMenuRef.current && !statusMenuRef.current.contains(e.target as Node)) {
+        setShowStatusMenu(false);
+      }
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowStatusMenu(false);
+    };
+
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [showStatusMenu]);
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <img src={appIcon} alt="Accenture Ride" className="h-8 w-8 rounded-lg" />
+          <img src={appIcon} alt="Corp Ride" className="h-8 w-8 rounded-lg" />
           <div className="flex items-center space-x-2">
             <Car className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Accenture Ride
+              Corp Ride
             </h1>
           </div>
         </div>
@@ -57,22 +80,57 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                     <div className="w-full border-t my-2" />
                     <Link to="/profile" className="text-sm text-primary hover:underline">Editar perfil</Link>
                     <div className="relative">
-                      <button className="text-xs text-green-600 underline" onClick={() => {}}>
-                        Status: {status}
+                      <button
+                        className="flex items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-muted transition"
+                        onClick={() => setShowStatusMenu((s) => !s)}
+                        aria-haspopup="true"
+                        aria-expanded={showStatusMenu}
+                      >
+                        {/* colored dot */}
+                        <span
+                          className={
+                            `inline-block h-2.5 w-2.5 rounded-full ${status === "Passageiro" ? "bg-emerald-500" : "bg-amber-500"}`
+                          }
+                          aria-hidden
+                        />
+                        {/* icon + label */}
+                        {status === "Passageiro" ? (
+                          <>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{status}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Car className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{status}</span>
+                          </>
+                        )}
                       </button>
-                      <div className="absolute right-0 mt-1 w-40 bg-popover border rounded-md shadow-md p-2">
-                        <button className="w-full text-left px-2 py-1 hover:bg-muted" onClick={() => setStatus("Online")}>Online</button>
-                        <button className="w-full text-left px-2 py-1 hover:bg-muted" onClick={() => setStatus("Passageiro")}>Passageiro</button>
-                        <button className="w-full text-left px-2 py-1 hover:bg-muted" onClick={() => setStatus("Usuário")}>Usuário</button>
-                      </div>
+
+                      {showStatusMenu && (
+                        <div ref={statusMenuRef} className="absolute right-0 mt-1 w-48 bg-popover border rounded-md shadow-md p-2">
+                          <button className={`w-full text-left px-2 py-1 hover:bg-muted ${status === "Passageiro" ? "bg-primary/10 font-semibold" : ""}`} onClick={() => { setStatus("Passageiro"); setShowStatusMenu(false); }}>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                              <span>Passageiro</span>
+                            </div>
+                          </button>
+                          <button className={`w-full text-left px-2 py-1 hover:bg-muted ${status === "Motorista" ? "bg-primary/10 font-semibold" : ""}`} onClick={() => { setStatus("Motorista"); setShowStatusMenu(false); }}>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
+                              <span>Motorista</span>
+                            </div>
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="w-full border-t my-2" />
                     <div className="w-full">
                       <span className="font-semibold text-sm mb-1 block">Histórico de Caronas</span>
                       <ul className="text-xs space-y-1">
-                        <li>12/09/2025 - São Paulo → Alphaville</li>
-                        <li>05/09/2025 - Alphaville → São Paulo</li>
-                        <li>28/08/2025 - São Paulo → Alphaville</li>
+                        <li>12/09/2025 - Recife → Graças</li>
+                        <li>05/09/2025 - Graças → Recife</li>
+                        <li>28/08/2025 - Recife → Graças</li>
                         <li className="text-muted-foreground">...mais</li>
                       </ul>
                     </div>
