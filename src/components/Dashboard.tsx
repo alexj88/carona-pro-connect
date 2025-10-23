@@ -34,7 +34,6 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       availableSeats: 2,
       totalSeats: 4,
       rating: 4.8,
-      price: 15.0,
       group: "Tecnologia",
       tags: ["Regular", "Não fumante"],
     },
@@ -61,7 +60,6 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       availableSeats: 3,
       totalSeats: 4,
       rating: 4.7,
-      price: 12.0,
       group: "Estratégia",
       tags: ["Pontual", "Conversa"],
     },
@@ -127,11 +125,11 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
             </Card>
             <Card className="bg-gradient-card border-0">
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-primary">R$ 420</div>
-                <div className="text-sm text-muted-foreground">
-                  Economia Mensal
-                </div>
-              </CardContent>
+                  <div className="text-2xl font-bold text-primary">420</div>
+                  <div className="text-sm text-muted-foreground">
+                    Economia Mensal
+                  </div>
+                </CardContent>
             </Card>
           </div>
 

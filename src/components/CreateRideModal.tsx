@@ -37,7 +37,6 @@ interface CreateRideModalProps {
     time: string;
     date: string;
     seats: number;
-    price: number;
     description: string;
     group: string;
     isRecurring: boolean;
@@ -75,7 +74,7 @@ const CreateRideModal = ({
       time: formData.time,
       date: formData.date,
       seats: parseInt(formData.availableSeats) || 0, // ✅ Agora com nome correto
-      price: parseFloat(formData.price) || 0,
+  // price removed per request
       description: formData.description,
       group: formData.group,
       isRecurring: formData.isRecurring,
@@ -242,26 +241,12 @@ const CreateRideModal = ({
           {/* Preço e Preferências */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-lg">
-                <DollarSign className="h-5 w-5" />
-                <span>Preço e Preferências</span>
+                  <CardTitle className="flex items-center space-x-2 text-lg">
+                <span>Preferências</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="price">Preço por pessoa (opcional)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder="0.00"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Deixe em branco para caronas gratuitas
-                </p>
-              </div>
+              {/* price removed */}
 
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
