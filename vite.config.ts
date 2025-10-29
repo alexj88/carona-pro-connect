@@ -15,4 +15,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      // Redireciona qualquer requisição que comece com /api
+      '/api': {
+        target: 'http://localhost:3001', // A porta do seu backend
+        changeOrigin: true, // Necessário para evitar erros de origem
+      }
+    }
+  }
 }));
