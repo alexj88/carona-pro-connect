@@ -55,6 +55,48 @@ app.post('/api/motoristas', async (req, res) => {
   }
 });
 
+//Criar um novo Usuário (Passageiro)
+app.post('/api/usuarios', async (req, res) => {
+    const { nome, email, telefone } = req.body;
+
+    if (!nome || !email) {
+        return res.status(400).json({ error: 'Nome e email são obrigatórios para o usuário.' });
+    }
+
+    try {
+        const result = await query(
+            'INSERT INTO usuarios (nome, email, telefone) VALUES ($1, $2, $3) RETURNING id, nome, email, telefone',
+            [nome, email, telefone]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao criar usuário:', err);
+
+          // VERIFICAÇÃO DE TIPO NECESSÁRIA PELO TYPESCRIPT
+    if (err instanceof Error) {
+        // Tenta acessar a propriedade 'code' se estiver disponível
+        // É comum que o erro do PG tenha a propriedade 'code' direto no objeto erro
+        const pgError = err as any;
+        // O código de erro '23505' é para violação de UNIQUE (ex: email já existe
+        if (pgError.code === '23505') {
+            return res.status(409).json({ error: 'Este email já está cadastrado.' });
+        }
+      }
+      // Se não for um erro PG conhecido, ou não for um objeto Error
+        res.status(500).json({ error: 'Erro interno ao criar usuário.' });
+    }
+});
+
+// Buscar todos os Usuários
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const result = await query('SELECT id, nome, email, telefone FROM usuarios');
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Erro ao buscar usuários:', err);
+        res.status(500).json({ error: 'Erro ao buscar usuários.' });
+    }
+});
 
 // === Iniciar o Servidor ===
 app.listen(PORT, () => {
