@@ -1,10 +1,10 @@
-import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
-import { query } from './db'; // Importa nossa função de query
-
 // Carrega as variáveis de ambiente
 dotenv.config();
+
+import express from 'express';
+import cors from 'cors';
+import { query } from './db.js'; // Importa nossa função de query
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Define uma porta para o backend
