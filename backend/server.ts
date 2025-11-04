@@ -98,6 +98,43 @@ app.get('/api/usuarios', async (req, res) => {
     }
 });
 
+// Solicitar uma nova Corrida
+app.post('/api/corridas', async (req, res) => {
+    const { passageiro_id, origem, destino } = req.body;
+
+    if (!passageiro_id || !origem || !destino) {
+        return res.status(400).json({ error: 'ID do passageiro, origem e destino são obrigatórios.' });
+    }
+
+    try {
+        // A corrida começa com status 'solicitada' e motorista_id nulo
+        const result = await query(
+            'INSERT INTO corridas (passageiro_id, origem, destino) VALUES ($1, $2, $3) RETURNING *',
+            [passageiro_id, origem, destino]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao solicitar corrida:', err);
+        res.status(500).json({ error: 'Erro ao solicitar corrida.' });
+    }
+});
+
+// Buscar Corridas por Passageiro
+app.get('/api/corridas/passageiro/:id', async (req, res) => {
+    const passageiroId = req.params.id;
+
+    try {
+        const result = await query(
+            'SELECT * FROM corridas WHERE passageiro_id = $1 ORDER BY data_solicitacao DESC',
+            [passageiroId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(`Erro ao buscar corridas para o passageiro ${passageiroId}:`, err);
+        res.status(500).json({ error: 'Erro ao buscar corridas.' });
+    }
+});
+
 // === Iniciar o Servidor ===
 app.listen(PORT, () => {
   console.log(`Backend rodando em http://localhost:${PORT}`);
