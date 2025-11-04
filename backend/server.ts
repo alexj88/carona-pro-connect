@@ -37,16 +37,16 @@ app.get('/api/motoristas', async (req, res) => {
 
 // Rota de exemplo para criar um motorista (exemplo)
 app.post('/api/motoristas', async (req, res) => {
-  const { nome, veiculo } = req.body;
+  const { nome, email, veiculo, placa } = req.body;
 
-  if (!nome || !veiculo) {
-    return res.status(400).json({ error: 'Nome e veículo são obrigatórios' });
+  if (!nome || !email || !veiculo || !placa) {
+    return res.status(400).json({ error: 'Nome, Email, Veículo e Placa são obrigatórios' });
   }
 
   try {
     const result = await query(
-      'INSERT INTO motoristas (nome, veiculo) VALUES ($1, $2) RETURNING *',
-      [nome, veiculo]
+      'INSERT INTO motoristas (nome, email, veiculo, placa) VALUES ($1, $2, $3, $4) RETURNING *',
+      [nome, email, veiculo, placa]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
