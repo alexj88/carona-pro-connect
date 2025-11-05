@@ -55,6 +55,24 @@ app.post('/api/motoristas', async (req, res) => {
   }
 });
 
+// Rota para buscar um motorista por ID
+app.get('/api/motoristas/:id', async (req, res) => {
+    const motoristaId = req.params.id;
+
+    try {
+        const result = await query('SELECT * FROM motoristas WHERE id = $1', [motoristaId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Motorista não encontrado.' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao buscar motorista por ID:', err);
+        res.status(500).json({ error: 'Erro ao buscar motorista.' });
+    }
+});
+
 //Criar um novo Usuário (Passageiro)
 app.post('/api/usuarios', async (req, res) => {
     const { nome, email, telefone } = req.body;
