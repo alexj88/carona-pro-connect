@@ -73,6 +73,67 @@ app.get('/api/motoristas/:id', async (req, res) => {
     }
 });
 
+// Rota para atualizar um motorista (PUT)
+app.put('/api/motoristas/:id', async (req, res) => {
+    const motoristaId = req.params.id;
+    const { nome, email, veiculo, placa } = req.body;
+
+    // Verificação de campos obrigatórios
+    if (!nome || !email || !veiculo || !placa) {
+        return res.status(400).json({ error: 'Nome, Email, Veículo e Placa são obrigatórios para atualização.' });
+    }
+
+    try {
+        const result = await query(
+            'UPDATE motoristas SET nome = $1, email = $2, veiculo = $3, placa = $4 WHERE id = $5 RETURNING *',
+            [nome, email, veiculo, placa, motoristaId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Motorista não encontrado para atualização.' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao atualizar motorista:', err);
+        
+        // Tratamento para email ou placa duplicados (violação UNIQUE)
+        const pgError = err as any; 
+        if (pgError.code === '23505') {
+            return res.status(409).json({ error: 'Email ou Placa já estão em uso por outro registro.' });
+        }
+        
+        res.status(500).json({ error: 'Erro interno ao atualizar motorista.' });
+    }
+});
+
+// Rota para deletar um motorista (DELETE)
+app.delete('/api/motoristas/:id', async (req, res) => {
+    const motoristaId = req.params.id;
+
+    try {
+        const result = await query('DELETE FROM motoristas WHERE id = $1 RETURNING id', [motoristaId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Motorista não encontrado para remoção.' });
+        }
+
+        // Retorna 204 No Content para remoção bem-sucedida, sem corpo
+        res.status(204).send(); 
+        
+    } catch (err) {
+        console.error('Erro ao deletar motorista:', err);
+        
+        // Tratamento de erro comum: motorista tem corridas associadas (Foreign Key)
+        const pgError = err as any; 
+        if (pgError.code === '23503') { 
+            return res.status(409).json({ error: 'Não é possível remover: O motorista tem corridas associadas.' });
+        }
+
+        res.status(500).json({ error: 'Erro interno ao deletar motorista.' });
+    }
+});
+
 //Criar um novo Usuário (Passageiro)
 app.post('/api/usuarios', async (req, res) => {
     const { nome, email, telefone } = req.body;
