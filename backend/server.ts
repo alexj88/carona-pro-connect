@@ -23,10 +23,9 @@ app.get('/api', (req, res) => {
   res.json({ message: 'API do Carona Pro Connect está funcionando!' });
 });
 
-// Rota de exemplo para buscar motoristas (exemplo)
+// Rota para buscar motoristas
 app.get('/api/motoristas', async (req, res) => {
   try {
-    // ATENÇÃO: Você precisa criar essa tabela 'motoristas' no seu banco!
     const result = await query('SELECT * FROM motoristas');
     res.json(result.rows);
   } catch (err) {
@@ -35,7 +34,7 @@ app.get('/api/motoristas', async (req, res) => {
   }
 });
 
-// Rota de exemplo para criar um motorista (exemplo)
+// Rota para criar um motorista
 app.post('/api/motoristas', async (req, res) => {
   const { nome, email, veiculo, placa } = req.body;
 
@@ -211,6 +210,115 @@ app.get('/api/corridas/passageiro/:id', async (req, res) => {
     } catch (err) {
         console.error(`Erro ao buscar corridas para o passageiro ${passageiroId}:`, err);
         res.status(500).json({ error: 'Erro ao buscar corridas.' });
+    }
+});
+
+// Rota para buscar UMA Corrida por ID
+app.get('/api/corridas/:id', async (req, res) => {
+    const corridaId = req.params.id;
+
+    try {
+        const result = await query(
+            'SELECT * FROM corridas WHERE id = $1',
+            [corridaId]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Corrida não encontrada.' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao buscar corrida por ID:', err);
+        res.status(500).json({ error: 'Erro ao buscar corrida.' });
+    }
+});
+
+// Rota para Motorista ACEITAR a Corrida (Atualiza motorista_id e status)
+app.put('/api/corridas/:id/aceitar', async (req, res) => {
+    const corridaId = req.params.id;
+    const { motorista_id } = req.body; // ID do motorista que aceitou
+
+    if (!motorista_id) {
+        return res.status(400).json({ error: 'O ID do motorista é obrigatório para aceitar a corrida.' });
+    }
+    
+    try {
+        const result = await query(
+            'UPDATE corridas SET motorista_id = $1, status = $2 WHERE id = $3 AND status = $4 RETURNING *',
+            [motorista_id, 'aceita', corridaId, 'solicitada']
+        );
+
+        if (result.rows.length === 0) {
+            // Pode ser 404 (não existe) ou 409 (status errado)
+            const check = await query('SELECT status FROM corridas WHERE id = $1', [corridaId]);
+            if (check.rows.length === 0) {
+                 return res.status(404).json({ error: 'Corrida não encontrada.' });
+            }
+            return res.status(409).json({ error: `Corrida não pode ser aceita. Status atual: ${check.rows[0].status}.` });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao aceitar corrida:', err);
+        // Erro 23503: violação de chave estrangeira (motorista_id não existe)
+        const pgError = err as any; 
+        if (pgError.code === '23503') { 
+            return res.status(400).json({ error: 'ID do Motorista inválido.' });
+        }
+        res.status(500).json({ error: 'Erro interno ao aceitar corrida.' });
+    }
+});
+
+
+// Rota genérica para atualizar o status da corrida (usado para em_andamento/concluida/cancelada)
+app.put('/api/corridas/:id/status', async (req, res) => {
+    const corridaId = req.params.id;
+    const { status } = req.body; 
+
+    const statusValidos = ['em_andamento', 'concluida', 'cancelada'];
+
+    if (!status || !statusValidos.includes(status)) {
+        return res.status(400).json({ error: 'Status inválido. Use: em_andamento, concluida, ou cancelada.' });
+    }
+
+    // Se for 'concluida', registra a data de conclusão
+    const dataConclusao = (status === 'concluida') ? 'CURRENT_TIMESTAMP' : 'NULL';
+
+    try {
+        const result = await query(
+            `UPDATE corridas SET status = $1, data_conclusao = ${dataConclusao} WHERE id = $2 RETURNING *`,
+            [status, corridaId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Corrida não encontrada para atualização.' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao atualizar status da corrida:', err);
+        res.status(500).json({ error: 'Erro interno ao atualizar status da corrida.' });
+    }
+});
+
+
+// Rota para deletar uma Corrida (DELETE)
+app.delete('/api/corridas/:id', async (req, res) => {
+    const corridaId = req.params.id;
+
+    try {
+        const result = await query('DELETE FROM corridas WHERE id = $1 RETURNING id', [corridaId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Corrida não encontrada para remoção.' });
+        }
+
+        res.status(204).send(); 
+        
+    } catch (err) {
+        console.error('Erro ao deletar corrida:', err);
+        res.status(500).json({ error: 'Erro interno ao deletar corrida.' });
     }
 });
 
