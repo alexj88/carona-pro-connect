@@ -1,50 +1,80 @@
-// src/pages/MotoristasPage.tsx (Exemplo)
-
 import React, { useState, useEffect } from 'react';
-import { getMotoristas } from '../services/apiServices.ts'; // Importe o serviço
+import { getMotoristas, deleteMotorista } from '../services/motoristaService';
+import { Motorista } from '../types';
 
-// Defina a interface do motorista para tipagem
-interface Motorista {
-  id: number;
-  nome: string;
-  veiculo: string;
-}
+const MotoristaPage: React.FC = () => {
+    const [motoristas, setMotoristas] = useState<Motorista[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-const MotoristasPage: React.FC = () => {
-  const [motoristas, setMotoristas] = useState<Motorista[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    // Função para carregar os dados
+    const loadMotoristas = async () => {
+        setLoading(true);
+        try {
+            const data = await getMotoristas();
+            setMotoristas(data);
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Erro desconhecido ao carregar motoristas.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  useEffect(() => {
-    async function loadMotoristas() {
-      try {
-        const data = await getMotoristas();
-        setMotoristas(data);
-        setError(null);
-      } catch (err) {
-        setError("Não foi possível carregar os motoristas. Verifique o backend.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadMotoristas();
-  }, []);
+    // Efeito para carregar os dados na montagem do componente
+    useEffect(() => {
+        loadMotoristas();
+    }, []);
 
-  if (loading) return <div>Carregando motoristas...</div>;
-  if (error) return <div style={{ color: 'red' }}>Erro: {error}</div>;
+    // Função para deletar um motorista
+    const handleDelete = async (id: number) => {
+        if (!window.confirm("Tem certeza que deseja deletar este motorista?")) return;
+        
+        try {
+            await deleteMotorista(id);
+            // Se deletado com sucesso, recarrega a lista
+            loadMotoristas(); 
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Erro ao deletar motorista.");
+        }
+    };
 
-  return (
-    <div>
-      <h2>Lista de Motoristas</h2>
-      <ul>
-        {motoristas.map((motorista) => (
-          <li key={motorista.id}>
-            {motorista.nome} - {motorista.veiculo}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+
+    if (loading) return <div>Carregando lista de motoristas...</div>;
+    if (error) return <div style={{ color: 'red' }}>Erro: {error}</div>;
+
+    return (
+        <div style={{ padding: '20px' }}>
+            <h1>Gerenciamento de Motoristas</h1>
+            {/* Aqui você adicionaria um formulário para POST/PUT */}
+            
+            <h2>Lista de Motoristas Cadastrados</h2>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+                {motoristas.length === 0 ? (
+                    <li>Nenhum motorista cadastrado.</li>
+                ) : (
+                    motoristas.map((driver) => (
+                        <li key={driver.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: '10px' }}>
+                            <strong>{driver.nome}</strong> ({driver.email})
+                            <p>Veículo: {driver.veiculo} - Placa: {driver.placa}</p>
+                            <button 
+                                onClick={() => alert(`Ação de Edição para o motorista ${driver.id}`)}
+                                style={{ marginRight: '10px' }}
+                            >
+                                Editar
+                            </button>
+                            <button 
+                                onClick={() => handleDelete(driver.id)} 
+                                style={{ backgroundColor: 'red', color: 'white' }}
+                            >
+                                Deletar
+                            </button>
+                        </li>
+                    ))
+                )}
+            </ul>
+        </div>
+    );
 };
 
-export default MotoristasPage;
+export default MotoristaPage;
