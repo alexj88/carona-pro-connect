@@ -11,7 +11,9 @@ const PORT = process.env.PORT || 3001; // Define uma porta para o backend
 
 // === Middlewares ===
 // Habilita o CORS para que o frontend (Vite em localhost:5173) possa fazer requisições
-app.use(cors()); 
+app.use(cors({
+    origin: 'http://localhost:5173', // Isso permite apenas o frontend acessar
+})); 
 
 // Habilita o parseamento de JSON no corpo das requisições (para POST, PUT, PATCH)
 app.use(express.json());
