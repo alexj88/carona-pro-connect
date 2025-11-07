@@ -176,6 +176,85 @@ app.get('/api/usuarios', async (req, res) => {
     }
 });
 
+// Rota para buscar um Usuário por ID
+app.get('/api/usuarios/:id', async (req, res) => {
+    const usuarioId = req.params.id;
+
+    try {
+        const result = await query('SELECT id, nome, email, telefone FROM usuarios WHERE id = $1', [usuarioId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao buscar usuário por ID:', err);
+        res.status(500).json({ error: 'Erro ao buscar usuário.' });
+    }
+});
+
+// Rota para atualizar um Usuário (PUT)
+app.put('/api/usuarios/:id', async (req, res) => {
+    const usuarioId = req.params.id;
+    const { nome, email, telefone } = req.body;
+
+    // Verificação de campos obrigatórios (os campos 'NOT NULL' na tabela)
+    if (!nome || !email) {
+        return res.status(400).json({ error: 'Nome e Email são obrigatórios para atualização.' });
+    }
+
+    try {
+        const result = await query(
+            'UPDATE usuarios SET nome = $1, email = $2, telefone = $3 WHERE id = $4 RETURNING id, nome, email, telefone',
+            [nome, email, telefone, usuarioId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado para atualização.' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Erro ao atualizar usuário:', err);
+        
+        // Tratamento para email duplicado (violação UNIQUE)
+        const pgError = err as any; 
+        if (pgError.code === '23505') {
+            return res.status(409).json({ error: 'Este email já está em uso por outro usuário.' });
+        }
+        
+        res.status(500).json({ error: 'Erro interno ao atualizar usuário.' });
+    }
+});
+
+// Rota para deletar um Usuário (DELETE)
+app.delete('/api/usuarios/:id', async (req, res) => {
+    const usuarioId = req.params.id;
+
+    try {
+        const result = await query('DELETE FROM usuarios WHERE id = $1 RETURNING id', [usuarioId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado para remoção.' });
+        }
+
+        // Retorna 204 No Content para remoção bem-sucedida
+        res.status(204).send(); 
+        
+    } catch (err) {
+        console.error('Erro ao deletar usuário:', err);
+        
+        // Tratamento de erro: O usuário tem corridas associadas (Foreign Key)
+        const pgError = err as any; 
+        if (pgError.code === '23503') { 
+            return res.status(409).json({ error: 'Não é possível remover: O usuário tem corridas associadas registradas.' });
+        }
+
+        res.status(500).json({ error: 'Erro interno ao deletar usuário.' });
+    }
+});
+
 // Solicitar uma nova Corrida
 app.post('/api/corridas', async (req, res) => {
     const { passageiro_id, origem, destino } = req.body;
