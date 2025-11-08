@@ -3,11 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { getUsuarios, deleteUsuario } from '../services/usuarioService';
 import { Usuario } from '../types';
+import UserForm from '../components/UserForm'; // Importa o formulário
 
 const UsuarioPage: React.FC = () => {
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Estado para controlar a edição (se null, está no modo criação ou lista)
+    const [editingUser, setEditingUser] = useState<Usuario | null>(null);
+
+    // Estado para mostrar o formulário de criação
+    const [showCreateForm, setShowCreateForm] = useState(false);
 
     // Função para carregar os dados
     const loadUsuarios = async () => {
@@ -41,7 +48,7 @@ const UsuarioPage: React.FC = () => {
         }
     };
 
-
+    
     if (loading) return <div>Carregando lista de usuários...</div>;
     if (error) return <div style={{ color: 'red' }}>Erro: {error}</div>;
 
@@ -78,5 +85,7 @@ const UsuarioPage: React.FC = () => {
         </div>
     );
 };
+
+
 
 export default UsuarioPage;
