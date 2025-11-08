@@ -1,5 +1,3 @@
-// src/components/RideForm.tsx
-
 import React, { useState } from 'react';
 import { Corrida } from '../types';
 
