@@ -1,29 +1,42 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import About from "./pages/About";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// ... outras importações
+import Index from './pages/Index'; // Sua página principal (Dashboard)
+import About from './pages/About'; 
+import NotFound from './pages/NotFound';
 
-const queryClient = new QueryClient();
+// Importações dos Componentes de Página de Gerenciamento
+import UsuarioPage from './pages/UsuarioPage';
+import MotoristaPage from './pages/MotoristasPage';
+import CorridaPage from './pages/CorridaPage';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App: React.FC = () => {
+    // ... const queryClient = new QueryClient();
+
+    return (
+        // <QueryClientProvider client={queryClient}>
+        // <TooltipProvider>
+        // <Sonner>
+        <Router> 
+            <Routes>
+                {/* 1. ROTAS DO FRONTEND VISUAL (AS QUE JÁ EXISTIAM) */}
+                <Route path="/" element={<Index />} />        {/* Home/Dashboard */}
+                <Route path="/about" element={<About />} />
+
+                {/* 2. NOVAS ROTAS PARA AS PÁGINAS DE GERENCIAMENTO (ADMIN) */}
+                {/* Use /admin para separar as rotas do CRUD do seu layout principal */}
+                <Route path="/admin/corridas" element={<CorridaPage />} />
+                <Route path="/admin/usuarios" element={<UsuarioPage />} />
+                <Route path="/admin/motoristas" element={<MotoristaPage />} />
+
+                {/* Rota para 404 */}
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+        </Router>
+        // </Sonner>
+        // </TooltipProvider>
+        // </QueryClientProvider>
+    );
+};
 
 export default App;

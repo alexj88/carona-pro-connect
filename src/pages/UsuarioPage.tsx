@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getUsuarios, deleteUsuario, createUsuario, updateUsuario } from '../services/usuarioService';
 import { Usuario } from '../types';
 import UserForm from '../components/UserForm'; // Importa o formulário
+import AdminNav from '../components/AdminNav';
 
 const UsuarioPage: React.FC = () => {
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -81,6 +82,8 @@ const UsuarioPage: React.FC = () => {
     if (loading) return <div>Carregando lista de usuários...</div>;
     
     return (
+    <>
+        <AdminNav />
         <div style={{ padding: '20px' }}>
             <h1>Gerenciamento de Usuários</h1>
 
@@ -126,6 +129,7 @@ const UsuarioPage: React.FC = () => {
                 )}
             </ul>
         </div>
+    </>
     );
 };
 
