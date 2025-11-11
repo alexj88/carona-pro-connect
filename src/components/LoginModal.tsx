@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Mail, Lock, User, Building } from "lucide-react";
-import { useGoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { useGoogleLogin, CredentialResponse, GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 import SocialButton from "@/components/ui/social-button";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (email: string) => void;
+  onLogin: (email: string, name?: string, picture?: string) => void;
 }
 
 const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
@@ -28,7 +29,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      onLogin(email);
+      onLogin(email, "Usuário Local", "");
       onClose();
     }
   };
@@ -38,24 +39,41 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
     e.preventDefault();
     if (email && name) {
       console.log("Registro:", { name, email, company, role, department, photo });
-      onLogin(email);
+      onLogin(email, name, "");
       onClose();
     }
   };
 
-  // Login com Google usando hook
-  const googleLogin = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
-      console.log("Token do Google:", tokenResponse.access_token);
-      // Aqui você pode usar o token para pegar dados do usuário ou enviar para backend
-      onLogin("google-user"); // substitua pelo email real se decodificar o token
+  // Login com Google
+ const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+  if (credentialResponse.credential) {
+    try {
+      const decoded: any = jwtDecode(credentialResponse.credential);
+
+      const userData = {
+        email: decoded.email,
+        name: decoded.name,
+        picture: decoded.picture,
+      };
+
+      // Salva no localStorage
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // Passa para o Header e fecha o modal
+      onLogin(decoded.email, decoded.name, decoded.picture);
       onClose();
-    },
-    onError: () => console.log("Login com Google falhou"),
-  });
+    } catch (error) {
+      console.error("Erro ao decodificar token do Google:", error);
+    }
+  }
+};
+
+  const handleGoogleError = () => {
+    console.log("Login com Google falhou");
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl bg-gradient-primary bg-clip-text text-transparent">
@@ -69,7 +87,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
             <TabsTrigger value="register">Registrar</TabsTrigger>
           </TabsList>
 
-          {/* Login */}
+          {/* LOGIN */}
           <TabsContent value="login">
             <Card>
               <CardHeader className="text-center">
@@ -115,7 +133,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
                   </Button>
                 </form>
 
-                {/* Botão Google */}
+                {/* Login com Google */}
                 <div className="mt-4 space-y-2">
                   <SocialButton
                     variant="outline"
@@ -134,16 +152,15 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
                         <path fill="#EA4335" d="M272 107.8c39.6 0 75.3 13.6 103.4 40.4l77.6-77.6C405.9 24.4 347.1 0 272 0 170.6 0 75.6 51.3 31.2 126.6l88.4 70.6C141.1 155.6 201.2 107.8 272 107.8z"/>
                       </svg>
                     }
-                    onClick={() => googleLogin()}
                   >
-                    Entrar com Google
+                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
                   </SocialButton>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Registro */}
+          {/* REGISTRO */}
           <TabsContent value="register">
             <Card>
               <CardHeader className="text-center">
@@ -152,7 +169,76 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegister} className="space-y-4">
-                  {/* Mantém todos os campos de registro: Nome, Email, Empresa, Cargo, Setor, Foto e Senha */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Seu nome completo"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu.email@accenture.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Empresa</Label>
+                    <Input
+                      id="company"
+                      type="text"
+                      placeholder="Accenture"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Cargo</Label>
+                    <Input
+                      id="role"
+                      type="text"
+                      placeholder="Analista"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Setor</Label>
+                    <Input
+                      id="department"
+                      type="text"
+                      placeholder="TI, RH, etc."
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="photo">Foto (opcional)</Label>
+                    <Input id="photo" type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" variant="gradient" className="w-full">
+                    Registrar
+                  </Button>
                 </form>
               </CardContent>
             </Card>

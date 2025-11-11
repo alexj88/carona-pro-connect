@@ -12,14 +12,20 @@ interface HeaderProps {
 }
 
 const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
-  const handleLogout = () => {
-    window.location.href = "/";
-  };
-  // Default status is Passageiro; user can change to Motorista when needed
+  const [user, setUser] = useState<{ name: string; email: string; picture: string } | null>(null);
   const [status, setStatus] = useState<string>("Passageiro");
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
 
+  // Recupera dados do usuário do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("user");
+    if (saved) {
+      setUser(JSON.parse(saved));
+    }
+  }, []);
+
+  // Fecha menu de status ao clicar fora
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
       if (!showStatusMenu) return;
@@ -39,6 +45,12 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
       document.removeEventListener("keydown", onKey);
     };
   }, [showStatusMenu]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    window.location.reload();
+  };
+
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -53,32 +65,55 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
         </div>
 
         <nav className="hidden md:flex items-center space-x-6">
-          {/* Links removidos conforme solicitado */}
           <Link to="/about" className="text-foreground/80 hover:text-primary transition-colors">
             Sobre
           </Link>
         </nav>
 
         <div className="flex items-center space-x-3">
-          {isLoggedIn ? (
+          {user ? (
             <div className="flex items-center space-x-3">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="icon">
-                    <User className="h-4 w-4" />
+                    {user.picture ? (
+                      <img
+                        src={user.picture}
+                        alt={user.name}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end">
                   <div className="flex flex-col items-start space-y-2">
                     <div className="flex items-center space-x-3">
-                      <User className="h-6 w-6 text-primary" />
+                      {user.picture ? (
+                        <img
+                          src={user.picture}
+                          alt={user.name}
+                          className="h-8 w-8 rounded-full"
+                        />
+                      ) : (
+                        <User className="h-6 w-6 text-primary" />
+                      )}
                       <div>
-                        <span className="font-bold">João Silva</span>
-                        <div className="text-xs text-muted-foreground">joao.silva@email.com</div>
+                        <span className="font-bold">{user.name}</span>
+                        <div className="text-xs text-muted-foreground">{user.email}</div>
                       </div>
                     </div>
+
                     <div className="w-full border-t my-2" />
-                    <Link to="/profile" className="text-sm text-primary hover:underline">Editar perfil</Link>
+
+                    <Link
+                      to="/profile"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Editar perfil
+                    </Link>
+
                     <div className="relative">
                       <button
                         className="flex items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-muted transition"
@@ -86,14 +121,14 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                         aria-haspopup="true"
                         aria-expanded={showStatusMenu}
                       >
-                        {/* colored dot */}
                         <span
-                          className={
-                            `inline-block h-2.5 w-2.5 rounded-full ${status === "Passageiro" ? "bg-emerald-500" : "bg-amber-500"}`
-                          }
+                          className={`inline-block h-2.5 w-2.5 rounded-full ${
+                            status === "Passageiro"
+                              ? "bg-emerald-500"
+                              : "bg-amber-500"
+                          }`}
                           aria-hidden
                         />
-                        {/* icon + label */}
                         {status === "Passageiro" ? (
                           <>
                             <Users className="h-4 w-4 text-muted-foreground" />
@@ -108,14 +143,37 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                       </button>
 
                       {showStatusMenu && (
-                        <div ref={statusMenuRef} className="absolute right-0 mt-1 w-48 bg-popover border rounded-md shadow-md p-2">
-                          <button className={`w-full text-left px-2 py-1 hover:bg-muted ${status === "Passageiro" ? "bg-primary/10 font-semibold" : ""}`} onClick={() => { setStatus("Passageiro"); setShowStatusMenu(false); }}>
+                        <div
+                          ref={statusMenuRef}
+                          className="absolute right-0 mt-1 w-48 bg-popover border rounded-md shadow-md p-2"
+                        >
+                          <button
+                            className={`w-full text-left px-2 py-1 hover:bg-muted ${
+                              status === "Passageiro"
+                                ? "bg-primary/10 font-semibold"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              setStatus("Passageiro");
+                              setShowStatusMenu(false);
+                            }}
+                          >
                             <div className="flex items-center gap-2">
                               <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
                               <span>Passageiro</span>
                             </div>
                           </button>
-                          <button className={`w-full text-left px-2 py-1 hover:bg-muted ${status === "Motorista" ? "bg-primary/10 font-semibold" : ""}`} onClick={() => { setStatus("Motorista"); setShowStatusMenu(false); }}>
+                          <button
+                            className={`w-full text-left px-2 py-1 hover:bg-muted ${
+                              status === "Motorista"
+                                ? "bg-primary/10 font-semibold"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              setStatus("Motorista");
+                              setShowStatusMenu(false);
+                            }}
+                          >
                             <div className="flex items-center gap-2">
                               <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
                               <span>Motorista</span>
@@ -124,9 +182,13 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                         </div>
                       )}
                     </div>
+
                     <div className="w-full border-t my-2" />
+
                     <div className="w-full">
-                      <span className="font-semibold text-sm mb-1 block">Histórico de Caronas</span>
+                      <span className="font-semibold text-sm mb-1 block">
+                        Histórico de Caronas
+                      </span>
                       <ul className="text-xs space-y-1">
                         <li>12/09/2025 - Recife → Graças</li>
                         <li>05/09/2025 - Graças → Recife</li>
@@ -134,7 +196,15 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                         <li className="text-muted-foreground">...mais</li>
                       </ul>
                     </div>
-                    <Button variant="destructive" size="sm" className="w-full mt-2" onClick={handleLogout}>Sair</Button>
+
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={handleLogout}
+                    >
+                      Sair
+                    </Button>
                   </div>
                 </PopoverContent>
               </Popover>
@@ -144,8 +214,13 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
               Entrar
             </Button>
           )}
-          
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={onMenuClick}
+          >
             <Menu className="h-4 w-4" />
           </Button>
         </div>
