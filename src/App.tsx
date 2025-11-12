@@ -7,6 +7,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import About from "./pages/About";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Map from "./pages/Map";
+import Ride from "./pages/Ride";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
+            <Route path="/ride" element={<Ride />} />
+            <Route path="/map" element={<Map />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

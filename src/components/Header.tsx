@@ -69,6 +69,11 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
             Sobre
           </Link>
         </nav>
+        <nav className="hidden md:flex items-center space-x-6">
+          <Link to="/ride" className="text-foreground/80 hover:text-primary transition-colors">
+            Caronas
+          </Link>
+        </nav>
 
         <div className="flex items-center space-x-3">
           {user ? (
