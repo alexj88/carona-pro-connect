@@ -15,7 +15,7 @@ import CorridaPage from "./pages/CorridaPage";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider clientId="877812251895-p7lkq11ia84bjt4517dd8ijuphsb47n8.apps.googleusercontent.com">
+  <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
