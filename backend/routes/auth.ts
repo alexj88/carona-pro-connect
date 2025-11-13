@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
-import { query } from "../db";
+import { query } from "../db.js";
 
 
 const router = Router();
