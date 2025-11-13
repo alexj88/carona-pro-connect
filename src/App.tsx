@@ -7,7 +7,6 @@ import About from "./pages/About";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Map from "./pages/Map";
-import Ride from "./pages/Ride";
 import UsuarioPage from "./pages/UsuarioPage";
 import MotoristaPage from "./pages/MotoristasPage";
 import CorridaPage from "./pages/CorridaPage";
@@ -23,8 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
-          <Route path="/ride" element={<Ride />} />
-          <Route path="/map" element={<Map />} />
+          <Route path="/map/:rideId" element={<Map />} />
           
           {/* ROTAS DE ADMIN */}
                 <Route path="/admin/corridas" element={<CorridaPage />} />

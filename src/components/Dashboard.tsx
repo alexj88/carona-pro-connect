@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,8 +20,10 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ userEmail }: DashboardProps) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateRide, setShowCreateRide] = useState(false);
+
 
   // Mock data para demonstração
   const mockRides = [
@@ -73,7 +76,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
   ];
 
   const handleJoinRide = (rideId: string) => {
-    console.log("Joining ride:", rideId);
+   navigate(`/map/${rideId}`);
     // Aqui seria implementada a lógica para solicitar participação na carona
   };
 

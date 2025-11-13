@@ -25,6 +25,32 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
     }
   }, []);
 
+  // Monitora evento de login customizado
+  useEffect(() => {
+    const handleUserLogin = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      setUser(customEvent.detail);
+    };
+
+    window.addEventListener("userLogin", handleUserLogin);
+    return () => window.removeEventListener("userLogin", handleUserLogin);
+  }, []);
+
+  // Monitora mudanças no localStorage (para logout e abas diferentes)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem("user");
+      if (saved) {
+        setUser(JSON.parse(saved));
+      } else {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   // Fecha menu de status ao clicar fora
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -69,12 +95,6 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
             Sobre
           </Link>
         </nav>
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/ride" className="text-foreground/80 hover:text-primary transition-colors">
-            Caronas
-          </Link>
-        </nav>
-
         <div className="flex items-center space-x-3">
           {user ? (
             <div className="flex items-center space-x-3">
