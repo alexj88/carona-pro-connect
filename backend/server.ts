@@ -403,6 +403,26 @@ app.delete('/api/corridas/:id', async (req, res) => {
     }
 });
 
+// Rota para buscar todas as Corridas Solicitadas (disponíveis para aceitar)
+app.get('/api/corridas/disponiveis', async (req, res) => {
+    try {
+        const result = await query(
+            `SELECT 
+                c.id, c.origem, c.destino, c.data_solicitacao,
+                u.nome AS passageiro_nome, u.email AS passageiro_email, u.telefone AS passageiro_telefone
+             FROM corridas c
+             JOIN usuarios u ON c.passageiro_id = u.id
+             WHERE c.motorista_id IS NULL AND c.status = 'solicitada'
+             ORDER BY c.data_solicitacao DESC;`
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Erro ao buscar caronas disponíveis:', err);
+        res.status(500).json({ error: 'Erro interno ao buscar caronas disponíveis.' });
+    }
+});
+
 // === Iniciar o Servidor ===
 app.listen(PORT, () => {
   console.log(`Backend rodando em http://localhost:${PORT}`);
