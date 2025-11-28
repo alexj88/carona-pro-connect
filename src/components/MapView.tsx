@@ -16,7 +16,7 @@ interface MapViewProps {
 
 export default function MapView({ rideData }: MapViewProps) {
   useEffect(() => {
-    const map = L.map("map").setView([-8.0476, -34.8770], 13);
+    const map = L.map("map").setView([-8.0476, -34.877], 13);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
@@ -54,9 +54,11 @@ export default function MapView({ rideData }: MapViewProps) {
           ),
         ],
         routeWhileDragging: false,
-        addWaypoints: false,
+        addWaypoints: true,
         draggableWaypoints: false,
         fitSelectedRoutes: true,
+        language: "pt-BR",
+        units: "metric",
         show: false,
         lineOptions: {
           styles: [{ color: "blue", weight: 5 }],

@@ -97,7 +97,7 @@ export default function Ride() {
                   <Label htmlFor="destination">Destino</Label>
                   <Input
                     id="destination"
-                    placeholder="Para onde você quer ir? (ex: São Paulo, SP)"
+                    placeholder="Para onde você quer ir? (ex: Camaragibe, PE)"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
                     required
