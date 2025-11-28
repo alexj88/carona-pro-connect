@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-routing-machine";
 
 interface RideData {
   currentLocation: string;
@@ -15,64 +16,59 @@ interface MapViewProps {
 
 export default function MapView({ rideData }: MapViewProps) {
   useEffect(() => {
-    const map = L.map("map").setView([-8.0476, -34.8770], 13); // Recife
+    const map = L.map("map").setView([-8.0476, -34.8770], 13);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    // Se houver dados de carona, adiciona marcadores
-    if (rideData && rideData.currentCoords && rideData.destinationCoords) {
-      // Marcador do local atual (verde)
-      L.marker(rideData.currentCoords, {
-        title: "Local Atual",
-      })
-        .addTo(map)
-        .bindPopup(`<b>Saída:</b> ${rideData.currentLocation}`)
-        .openPopup();
+    let routingControl: any = null;
 
-      // Marcador do destino (vermelho)
-      const redMarkerIcon = L.divIcon({
+    if (rideData?.currentCoords && rideData?.destinationCoords) {
+      // Marcador atual
+      L.marker(rideData.currentCoords, { title: "Local Atual" })
+        .addTo(map)
+        .bindPopup(`<b>Saída:</b> ${rideData.currentLocation}`);
+
+      // Marcador destino (vermelho)
+      const redIcon = L.divIcon({
         html: `<div style="background-color: #b32626ff; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white;"></div>`,
         iconSize: [25, 25],
         className: "custom-marker",
       });
 
       L.marker(rideData.destinationCoords, {
-        icon: redMarkerIcon,
+        icon: redIcon,
         title: "Destino",
       })
         .addTo(map)
-        .bindPopup(`<b>Destino:</b> ${rideData.destination}`)
-        .openPopup();
+        .bindPopup(`<b>Destino:</b> ${rideData.destination}`);
 
-      // Desenha uma linha entre os dois pontos
-      L.polyline(
-        [rideData.currentCoords, rideData.destinationCoords],
-        {
-          color: "blue",
-          weight: 2,
-          opacity: 0.7,
-          dashArray: "5, 5",
-        }
-      ).addTo(map);
-
-      // Ajusta o zoom para mostrar ambos os marcadores
-      const group = L.featureGroup([
-        L.marker(rideData.currentCoords),
-        L.marker(rideData.destinationCoords),
-      ]);
-      map.fitBounds(group.getBounds().pad(0.1));
-    } else {
-      // Marcador padrão se não houver dados
-      L.marker([-8.0476, -34.8770])
-        .addTo(map)
-        .bindPopup("Você está aqui! 🚗")
-        .openPopup();
+      // 🚗 **Rota de carro REAL**
+      routingControl = (L as any).Routing.control({
+        waypoints: [
+          L.latLng(rideData.currentCoords[0], rideData.currentCoords[1]),
+          L.latLng(
+            rideData.destinationCoords[0],
+            rideData.destinationCoords[1]
+          ),
+        ],
+        routeWhileDragging: false,
+        addWaypoints: false,
+        draggableWaypoints: false,
+        fitSelectedRoutes: true,
+        show: false,
+        lineOptions: {
+          styles: [{ color: "blue", weight: 5 }],
+        },
+      }).addTo(map);
     }
 
     return () => {
       map.remove();
+      if (routingControl) {
+        routingControl.remove();
+      }
     };
   }, [rideData]);
 
