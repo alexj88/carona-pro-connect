@@ -20,7 +20,7 @@ interface DashboardProps {
 
 const Dashboard = ({ userEmail }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showCreateRide, setShowCreateRide] = useState(false);
+  const [showCreateRide, setShowCreateRide] = useState(true);
 
   // Mock data para demonstração
   const mockRides = [

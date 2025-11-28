@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Dashboard from "@/components/Dashboard";
@@ -24,24 +24,27 @@ const Index = () => {
   if (isLoggedIn) {
     return (
       <div className="min-h-screen bg-background">
-        <Header 
-          isLoggedIn={true}
-          onMenuClick={handleLogout}
-        />
-        <div style={{ padding: '10px 20px', backgroundColor: '#f0f0f0', borderBottom: '1px solid #ccc' }}>
-            <Link 
-                to="/admin/usuarios" // Rota que criamos para o painel
-                style={{ 
-                    padding: '8px 15px', 
-                    backgroundColor: '#4CAF50', // Cor de destaque
-                    color: 'white', 
-                    textDecoration: 'none', 
-                    borderRadius: '4px', 
-                    fontWeight: 'bold'
-                }}
-            >
-                ⚙️ Acessar Painel de Gerenciamento (CRUD)
-            </Link>
+        <Header isLoggedIn={true} onMenuClick={handleLogout} />
+        <div
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#f0f0f0",
+            borderBottom: "1px solid #ccc",
+          }}
+        >
+          <Link
+            to="/admin/usuarios" // Rota que criamos para o painel
+            style={{
+              padding: "8px 15px",
+              backgroundColor: "#4CAF50", // Cor de destaque
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "4px",
+              fontWeight: "bold",
+            }}
+          >
+            ⚙️ Acessar Painel de Gerenciamento (CRUD)
+          </Link>
         </div>
         <Dashboard userEmail={userEmail} />
       </div>
@@ -50,13 +53,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        onLogin={() => setShowLogin(true)}
-        isLoggedIn={false}
-      />
+      <Header onLogin={() => setShowLogin(true)} isLoggedIn={true} />
       <Hero onGetStarted={() => setShowLogin(true)} />
-      
-      <LoginModal 
+
+      <LoginModal
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}
         onLogin={handleLogin}
