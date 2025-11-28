@@ -2,7 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Car, Menu, User, Users } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import appIcon from "@/assets/app-icon.png";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { Link } from "react-router-dom";
 
 interface HeaderProps {
@@ -12,7 +16,11 @@ interface HeaderProps {
 }
 
 const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
-  const [user, setUser] = useState<{ name: string; email: string; picture: string } | null>(null);
+  const [user, setUser] = useState<{
+    name: string;
+    email: string;
+    picture: string;
+  } | null>(null);
   const [status, setStatus] = useState<string>("Passageiro");
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
@@ -29,7 +37,10 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
       if (!showStatusMenu) return;
-      if (statusMenuRef.current && !statusMenuRef.current.contains(e.target as Node)) {
+      if (
+        statusMenuRef.current &&
+        !statusMenuRef.current.contains(e.target as Node)
+      ) {
         setShowStatusMenu(false);
       }
     };
@@ -65,12 +76,26 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
         </div>
 
         <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/about" className="text-foreground/80 hover:text-primary transition-colors">
+          <Link
+            to="/about"
+            className="text-foreground/80 hover:text-primary transition-colors"
+          >
             Sobre
           </Link>
         </nav>
         <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/ride" className="text-foreground/80 hover:text-primary transition-colors">
+          <Link
+            to="/dashboard"
+            className="text-foreground/80 hover:text-primary transition-colors"
+          >
+            Dashboard
+          </Link>
+        </nav>
+        <nav className="hidden md:flex items-center space-x-6">
+          <Link
+            to=""
+            className="text-foreground/80 hover:text-primary transition-colors"
+          >
             Caronas
           </Link>
         </nav>
@@ -106,7 +131,9 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
                       )}
                       <div>
                         <span className="font-bold">{user.name}</span>
-                        <div className="text-xs text-muted-foreground">{user.email}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {user.email}
+                        </div>
                       </div>
                     </div>
 
