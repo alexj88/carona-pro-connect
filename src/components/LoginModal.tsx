@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Mail, Lock, User, Building } from "lucide-react";
 import { useGoogleLogin, CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
-import SocialButton from "@/components/ui/social-button";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -58,6 +57,9 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
 
       // Salva no localStorage
       localStorage.setItem("user", JSON.stringify(userData));
+
+      // Dispara evento customizado para outras partes da app
+      window.dispatchEvent(new CustomEvent("userLogin", { detail: userData }));
 
       // Passa para o Header e fecha o modal
       onLogin(decoded.email, decoded.name, decoded.picture);
@@ -134,27 +136,8 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
                 </form>
 
                 {/* Login com Google */}
-                <div className="mt-4 space-y-2">
-                  <SocialButton
-                    variant="outline"
-                    className="w-full"
-                    icon={
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 533.5 544.3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        role="img"
-                        aria-label="Google"
-                      >
-                        <path fill="#4285F4" d="M533.5 278.4c0-18.5-1.6-37.7-4.9-55.8H272v105.6h146.9c-6.3 34.1-25.3 62.9-54 82.1v68h87.2c51-47 80.4-116.3 80.4-199.9z"/>
-                        <path fill="#34A853" d="M272 544.3c73 0 134.4-24.1 179.2-65.3l-87.2-68c-24.2 16.3-55.1 26-92 26-70.8 0-130.9-47.8-152.4-112.1H31.2v70.6C75.6 493 170.6 544.3 272 544.3z"/>
-                        <path fill="#FBBC05" d="M119.6 323.5c-10.7-31.9-10.7-66.4 0-98.3V154.6H31.2c-39.1 76.2-39.1 167.1 0 243.3l88.4-74.4z"/>
-                        <path fill="#EA4335" d="M272 107.8c39.6 0 75.3 13.6 103.4 40.4l77.6-77.6C405.9 24.4 347.1 0 272 0 170.6 0 75.6 51.3 31.2 126.6l88.4 70.6C141.1 155.6 201.2 107.8 272 107.8z"/>
-                      </svg>
-                    }
-                  >
-                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-                  </SocialButton>
+                <div className="mt-4">
+                  <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
                 </div>
               </CardContent>
             </Card>
