@@ -18,70 +18,43 @@ interface DashboardProps {
   userEmail: string;
 }
 
+interface Driver {
+  id: number;
+  nome: string; // Adapte os campos conforme o retorno real do seu GET /api/motoristas
+  email: string;
+  avaliacao?: number; 
+  localizacao_atual?: string; 
+}
+
+interface Group {
+  name: string;
+  members: number;
+  rides: number;
+}
+
 const Dashboard = ({ userEmail }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateRide, setShowCreateRide] = useState(false);
 
-  // Mock data para demonstração
-  const mockRides = [
-    {
-      id: "1",
-      driverName: "Ana Silva",
-      from: "Recife",
-      to: "Cidade Universitária",
-      time: "08:00",
-      date: "18/09",
-      availableSeats: 2,
-      totalSeats: 4,
-      rating: 4.8,
-      group: "Tecnologia",
-      tags: ["Regular", "Não fumante"],
-    },
-    {
-      id: "2",
-      driverName: "Carlos Santos",
-      from: "Caxangá",
-      to: "Graças",
-      time: "18:30",
-      date: "18/09",
-      availableSeats: 1,
-      totalSeats: 3,
-      rating: 4.9,
-      group: "Consultoria",
-      tags: ["Ar condicionado", "Música"],
-    },
-    {
-      id: "3",
-      driverName: "Mariana Costa",
-      from: "Boa Viagem",
-      to: "Madalena",
-      time: "07:45",
-      date: "19/09",
-      availableSeats: 3,
-      totalSeats: 4,
-      rating: 4.7,
-      group: "Estratégia",
-      tags: ["Pontual", "Conversa"],
-    },
-  ];
-
-  const mockGroups = [
-    { name: "Tecnologia", members: 234, rides: 45 },
-    { name: "Consultoria", members: 189, rides: 32 },
-    { name: "Estratégia", members: 156, rides: 28 },
-    { name: "Design", members: 98, rides: 18 },
-  ];
+  const [rides, setRides] = useState<Driver[]>([]); 
+  const [groups, setGroups] = useState<Group[]>([]); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
 
   const handleJoinRide = (rideId: string) => {
     console.log("Joining ride:", rideId);
     // Aqui seria implementada a lógica para solicitar participação na carona
   };
 
-  const filteredRides = mockRides.filter(
-    (ride) =>
-      ride.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ride.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ride.driverName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRides = rides.filter(
+    (ride) =>{
+      const term = searchTerm.toLowerCase();
+      return ride.nome.toLowerCase().includes(term) ||
+             // Filtra pelo 'email' ou 'veiculo', se quiser adicionar mais opções de busca
+             ride.email.toLowerCase().includes(term); 
+             // Se você tivesse um campo 'localizacao', usaria: || ride.localizacao.toLowerCase().includes(term);
+    }
   );
 
   return (
