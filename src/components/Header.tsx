@@ -77,25 +77,6 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
 
         <nav className="hidden md:flex items-center space-x-6">
           <Link
-<<<<<<< HEAD
-            to="/about"
-            className="text-foreground/80 hover:text-primary transition-colors"
-          >
-            Sobre
-          </Link>
-        </nav>
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link
-            to="/dashboard"
-            className="text-foreground/80 hover:text-primary transition-colors"
-          >
-            Dashboard
-          </Link>
-        </nav>
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link
-            to=""
-=======
             to="/"
             className="text-foreground/80 hover:text-primary transition-colors"
           >
@@ -111,7 +92,6 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
           
           <Link
             to="/ride"
->>>>>>> c80e026
             className="text-foreground/80 hover:text-primary transition-colors"
           >
             Caronas
