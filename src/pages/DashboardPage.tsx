@@ -1,8 +1,10 @@
 import Dashboard from "@/components/Dashboard";
 import Header from "@/components/Header";
 export default function DashboardPage() {
-  return ( <div>
+  return (
+    <div>
       <Header />
       <Dashboard userEmail="teste@teste.com" />
-    </div>)
+    </div>
+  );
 }
