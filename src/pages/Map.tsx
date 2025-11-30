@@ -53,8 +53,8 @@ const baseMockRides = [
       to: [-8.0372, -34.8970],
     },
   },
-];
 
+];
 
 // (Removido: mockUsers — substituído por chat direto com motorista)
 
@@ -100,8 +100,11 @@ const Map = () => {
     // Se não houver coords, não inicializa o mapa aqui
     if (!ride.coords || !ride.coords.from || !ride.coords.to) return;
 
+    const fromTuple = ride.coords.from as [number, number];
+    const toTuple = ride.coords.to as [number, number];
+
     // Inicializa o mapa
-    const map = L.map("map").setView([ride.coords.from[0], ride.coords.from[1]], 13);
+    const map = L.map("map").setView(fromTuple, 13);
 
     // Camada base
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -124,12 +127,14 @@ const Map = () => {
     });
 
     // Marcadores de origem e destino (motorista)
-    const fromMarker = L.marker([ride.coords.from[0], ride.coords.from[1]], { icon: driverIcon })
+    
+
+    const fromMarker = L.marker(fromTuple, { icon: driverIcon })
       .addTo(map)
       .bindPopup(`<b>Motorista: ${ride.driverName}</b><br>Origem: ${ride.from}`)
       .openPopup();
 
-    const toMarker = L.marker([ride.coords.to[0], ride.coords.to[1]], { icon: destinationIcon })
+    const toMarker = L.marker(toTuple, { icon: destinationIcon })
       .addTo(map)
       .bindPopup(`<b>Destino:</b> ${ride.to}`);
 
@@ -138,8 +143,8 @@ const Map = () => {
     try {
       routingControl = (L as any).Routing.control({
         waypoints: [
-          L.latLng(ride.coords.from[0], ride.coords.from[1]),
-          L.latLng(ride.coords.to[0], ride.coords.to[1]),
+          L.latLng(fromTuple[0], fromTuple[1]),
+          L.latLng(toTuple[0], toTuple[1]),
         ],
         routeWhileDragging: false,
         addWaypoints: false,
@@ -152,12 +157,9 @@ const Map = () => {
           styles: [{ color: "#007bff", weight: 5 }],
         },
       }).addTo(map);
-    } catch (e) {
+      } catch (e) {
       // fallback: linha reta se routing-machine não funcionar
-      L.polyline([
-        [ride.coords.from[0], ride.coords.from[1]],
-        [ride.coords.to[0], ride.coords.to[1]],
-      ], { color: "#007bff", weight: 4, opacity: 0.7, dashArray: "10,6" }).addTo(map);
+      L.polyline([fromTuple, toTuple], { color: "#007bff", weight: 4, opacity: 0.7, dashArray: "10,6" }).addTo(map);
     }
 
     // guarda referência ao mapa e à linha do motorista
@@ -172,17 +174,17 @@ const Map = () => {
       if ((driverLineRef as any).currentRouting && (driverLineRef as any).currentRouting.getPlan) {
         const plan = (driverLineRef as any).currentRouting.getPlan();
         const waypoints = plan.getWaypoints ? plan.getWaypoints() : null;
-        if (waypoints && waypoints.length > 0) {
+          if (waypoints && waypoints.length > 0) {
           const latlngs = waypoints.map((w: any) => L.latLng(w.latLng.lat, w.latLng.lng));
           map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
         } else {
-          map.fitBounds(L.latLngBounds([ride.coords.from, ride.coords.to]), { padding: [50, 50] });
+          map.fitBounds(L.latLngBounds([fromTuple, toTuple]), { padding: [50, 50] });
         }
       } else {
-        map.fitBounds(L.latLngBounds([ride.coords.from, ride.coords.to]), { padding: [50, 50] });
+        map.fitBounds(L.latLngBounds([fromTuple, toTuple]), { padding: [50, 50] });
       }
     } catch (e) {
-      map.fitBounds(L.latLngBounds([ride.coords.from, ride.coords.to]), { padding: [50, 50] });
+      map.fitBounds(L.latLngBounds([fromTuple, toTuple]), { padding: [50, 50] });
     }
 
     return () => {

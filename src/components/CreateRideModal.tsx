@@ -131,7 +131,22 @@ const CreateRideModal = ({
 
       console.log("Created ride:", rideData);
 
-      onCreateRide(rideData);
+      // Chamamos onCreateRide com o formato esperado pelo pai (prop types)
+      const apiRide = {
+        from: rideData.from,
+        to: rideData.to,
+        time: rideData.time,
+        date: rideData.date,
+        seats: seats,
+        description: rideData.description,
+        group: rideData.group,
+        isRecurring: rideData.isRecurring,
+        allowSmoking: rideData.allowSmoking,
+        hasAirConditioning: rideData.hasAirConditioning,
+        acceptsPets: rideData.acceptsPets,
+      };
+
+      onCreateRide(apiRide);
     })().catch((err) => {
       console.error("Error creating ride:", err);
     });
