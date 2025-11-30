@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -92,7 +92,10 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     }
   };
 
-  
+  useEffect(() => {
+    // Importante: O useEffect precisa importar o hook 'useEffect' do 'react'
+    fetchAvailableRides();
+  }, []); // O array vazio [] garante que a função é chamada apenas UMA VEZ.
 
   const filteredRides = rides.filter(
     (ride) =>{
