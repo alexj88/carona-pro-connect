@@ -128,11 +128,11 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
             </Card>
             <Card className="bg-gradient-card border-0">
               <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-primary">420</div>
-                  <div className="text-sm text-muted-foreground">
-                    Economia Mensal
-                  </div>
-                </CardContent>
+                <div className="text-2xl font-bold text-primary">420</div>
+                <div className="text-sm text-muted-foreground">
+                  Economia Mensal
+                </div>
+              </CardContent>
             </Card>
           </div>
 

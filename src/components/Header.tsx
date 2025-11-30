@@ -100,12 +100,33 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
 
         <nav className="hidden md:flex items-center space-x-6">
           <Link
+            to="/"
+            className="text-foreground/80 hover:text-primary transition-colors"
+          >
+            Home
+          </Link>
+          
+          <Link
+              to="/dashboard"
+              className="text-foreground/80 hover:text-primary transition-colors"
+            >
+              Dashboard
+            </Link>
+          
+          <Link
+            to="/ride"
+            className="text-foreground/80 hover:text-primary transition-colors"
+          >
+            Caronas
+          </Link>
+          <Link
             to="/about"
             className="text-foreground/80 hover:text-primary transition-colors"
           >
             Sobre
           </Link>
         </nav>
+
         <div className="flex items-center space-x-3">
           {user ? (
             <div className="flex items-center space-x-3">

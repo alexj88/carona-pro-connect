@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import MapView from "@/components/MapView";
+import Header from "@/components/Header";
 
 interface RideData {
   currentLocation: string;
@@ -19,13 +20,17 @@ export default function Ride() {
   const [loading, setLoading] = useState(false);
 
   // Função para converter endereço em coordenadas (geocoding)
-  const geocodeAddress = async (address: string): Promise<[number, number] | null> => {
+  const geocodeAddress = async (
+    address: string
+  ): Promise<[number, number] | null> => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}`
       );
       const data = await response.json();
-      
+
       if (data.length > 0) {
         return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
       }
@@ -59,7 +64,9 @@ export default function Ride() {
           destinationCoords,
         });
       } else {
-        alert("Não foi possível encontrar um ou ambos os endereços. Tente novamente.");
+        alert(
+          "Não foi possível encontrar um ou ambos os endereços. Tente novamente."
+        );
       }
     } catch (error) {
       console.error("Erro ao buscar carona:", error);
@@ -71,14 +78,17 @@ export default function Ride() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
         {/* Formulário */}
         <div className="lg:col-span-1">
           <div className="max-w-md">
             <h1 className="text-2xl font-bold mb-6">Crie sua Carona</h1>
             <Card className="p-6">
-              <h4>Preencha os detalhes da sua carona para conectar-se com colegas</h4>
-              
+              <h4>
+                Preencha os detalhes da sua carona para conectar-se com colegas
+              </h4>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Campo de Local Atual */}
                 <div className="space-y-2">
@@ -105,11 +115,7 @@ export default function Ride() {
                 </div>
 
                 {/* Botão de Busca */}
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={loading}
-                >
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Carregando..." : "Criar Carona"}
                 </Button>
               </form>
@@ -117,7 +123,9 @@ export default function Ride() {
               {/* Exibe dados da carona criada */}
               {rideData && (
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="font-semibold text-blue-900 mb-2">Carona Criada!</h3>
+                  <h3 className="font-semibold text-blue-900 mb-2">
+                    Carona Criada!
+                  </h3>
                   <p className="text-sm text-blue-800">
                     <strong>De:</strong> {rideData.currentLocation}
                   </p>
