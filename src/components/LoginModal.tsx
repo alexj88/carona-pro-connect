@@ -28,6 +28,9 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
+      const userData = { email, name: "Usuário Local", picture: "" };
+      localStorage.setItem("user", JSON.stringify(userData));
+      window.dispatchEvent(new CustomEvent("userLogin", { detail: userData }));
       onLogin(email, "Usuário Local", "");
       onClose();
     }
@@ -38,6 +41,9 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
     e.preventDefault();
     if (email && name) {
       console.log("Registro:", { name, email, company, role, department, photo });
+      const userData = { email, name, picture: "" };
+      localStorage.setItem("user", JSON.stringify(userData));
+      window.dispatchEvent(new CustomEvent("userLogin", { detail: userData }));
       onLogin(email, name, "");
       onClose();
     }

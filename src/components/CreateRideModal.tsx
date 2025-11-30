@@ -68,22 +68,73 @@ const CreateRideModal = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const rideData = {
-      from: formData.from,
-      to: formData.to,
-      time: formData.time,
-      date: formData.date,
-      seats: parseInt(formData.availableSeats) || 0, // ✅ Agora com nome correto
-  // price removed per request
-      description: formData.description,
-      group: formData.group,
-      isRecurring: formData.isRecurring,
-      allowSmoking: formData.allowSmoking,
-      hasAirConditioning: formData.hasAirConditioning,
-      acceptsPets: formData.acceptsPets,
+    const geocode = async (address: string) => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            address
+          )}&limit=1`
+        );
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        }
+      } catch (err) {
+        // ignore
+      }
+      return null;
     };
 
-    onCreateRide(rideData); // ✅ Agora passando rideData convertido
+    (async () => {
+      // try to geocode origin and destination
+      const fromCoords = formData.from ? await geocode(formData.from) : null;
+      const toCoords = formData.to ? await geocode(formData.to) : null;
+
+      const id = Date.now().toString();
+
+      const seats = parseInt(formData.availableSeats) || 0;
+      const rideData = {
+        id,
+        driverName: "Você",
+        from: formData.from,
+        to: formData.to,
+        time: formData.time,
+        date: formData.date,
+        availableSeats: seats,
+        totalSeats: seats || 1,
+        rating: 5,
+        group: formData.group,
+        tags: [],
+        driverAvatar: "",
+        phone: "",
+        matchPercentage: 100,
+        sharedInterests: [],
+        coords: {
+          from: fromCoords ? [fromCoords.lat, fromCoords.lon] : null,
+          to: toCoords ? [toCoords.lat, toCoords.lon] : null,
+        },
+        description: formData.description,
+        isRecurring: formData.isRecurring,
+        allowSmoking: formData.allowSmoking,
+        hasAirConditioning: formData.hasAirConditioning,
+        acceptsPets: formData.acceptsPets,
+      };
+
+      // save created rides to localStorage so Map can load them
+      try {
+        const existing = JSON.parse(localStorage.getItem("createdRides") || "[]");
+        existing.push(rideData);
+        localStorage.setItem("createdRides", JSON.stringify(existing));
+      } catch (e) {
+        localStorage.setItem("createdRides", JSON.stringify([rideData]));
+      }
+
+      console.log("Created ride:", rideData);
+
+      onCreateRide(rideData);
+    })().catch((err) => {
+      console.error("Error creating ride:", err);
+    });
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-routing-machine";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Clock, Users, MessageCircle, Check } from "lucide-react";
 
 // Mock das caronas (pode ser o mesmo do Dashboard)
-const mockRides = [
+const baseMockRides = [
   {
     id: "1",
     driverName: "Ana Silva",
@@ -54,11 +55,34 @@ const mockRides = [
   },
 ];
 
+
 // (Removido: mockUsers — substituído por chat direto com motorista)
 
 const Map = () => {
   const { rideId } = useParams();
-  const ride = mockRides.find((r) => r.id === rideId);
+  const [rides, setRides] = useState<typeof baseMockRides>(baseMockRides as any);
+
+  // debug logs to help diagnose blank screen
+  useEffect(() => {
+    console.log("Map component mounted", { rideId });
+  }, [rideId]);
+
+  useEffect(() => {
+    const loadCreatedRides = () => {
+      try {
+        const created = JSON.parse(localStorage.getItem("createdRides") || "[]");
+        if (Array.isArray(created)) return created;
+      } catch (e) {
+        // ignore
+      }
+      return [];
+    };
+
+    const created = loadCreatedRides();
+    setRides([...baseMockRides, ...created]);
+  }, []);
+
+  const ride = rides.find((r: any) => r.id === rideId);
   const [hasRequested, setHasRequested] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const driverLineRef = useRef<L.Polyline | null>(null);
@@ -72,6 +96,9 @@ const Map = () => {
 
   useEffect(() => {
     if (!ride) return;
+
+    // Se não houver coords, não inicializa o mapa aqui
+    if (!ride.coords || !ride.coords.from || !ride.coords.to) return;
 
     // Inicializa o mapa
     const map = L.map("map").setView([ride.coords.from[0], ride.coords.from[1]], 13);
@@ -106,25 +133,104 @@ const Map = () => {
       .addTo(map)
       .bindPopup(`<b>Destino:</b> ${ride.to}`);
 
-    // Linha entre os pontos
-    const routeLine = L.polyline([[ride.coords.from[0], ride.coords.from[1]], [ride.coords.to[0], ride.coords.to[1]]], {
-      color: "#007bff",
-      weight: 4,
-      opacity: 0.7,
-      dashArray: "10,6",
-    }).addTo(map);
+    // Rota real usando leaflet-routing-machine (mais precisa que uma linha reta)
+    let routingControl: any = null;
+    try {
+      routingControl = (L as any).Routing.control({
+        waypoints: [
+          L.latLng(ride.coords.from[0], ride.coords.from[1]),
+          L.latLng(ride.coords.to[0], ride.coords.to[1]),
+        ],
+        routeWhileDragging: false,
+        addWaypoints: false,
+        draggableWaypoints: false,
+        fitSelectedRoutes: true,
+        language: "pt-BR",
+        units: "metric",
+        show: false,
+        lineOptions: {
+          styles: [{ color: "#007bff", weight: 5 }],
+        },
+      }).addTo(map);
+    } catch (e) {
+      // fallback: linha reta se routing-machine não funcionar
+      L.polyline([
+        [ride.coords.from[0], ride.coords.from[1]],
+        [ride.coords.to[0], ride.coords.to[1]],
+      ], { color: "#007bff", weight: 4, opacity: 0.7, dashArray: "10,6" }).addTo(map);
+    }
 
     // guarda referência ao mapa e à linha do motorista
     mapRef.current = map;
-    driverLineRef.current = routeLine;
+    driverLineRef.current = null;
+    // guarda controle para remoção
+    (driverLineRef as any).currentRouting = routingControl;
 
     // Ajusta o zoom para caber tudo (apenas rota do motorista por enquanto)
-    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+    try {
+      // se routingControl existir, fit nos waypoints; caso contrário usa bounds simples entre origem/destino
+      if ((driverLineRef as any).currentRouting && (driverLineRef as any).currentRouting.getPlan) {
+        const plan = (driverLineRef as any).currentRouting.getPlan();
+        const waypoints = plan.getWaypoints ? plan.getWaypoints() : null;
+        if (waypoints && waypoints.length > 0) {
+          const latlngs = waypoints.map((w: any) => L.latLng(w.latLng.lat, w.latLng.lng));
+          map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+        } else {
+          map.fitBounds(L.latLngBounds([ride.coords.from, ride.coords.to]), { padding: [50, 50] });
+        }
+      } else {
+        map.fitBounds(L.latLngBounds([ride.coords.from, ride.coords.to]), { padding: [50, 50] });
+      }
+    } catch (e) {
+      map.fitBounds(L.latLngBounds([ride.coords.from, ride.coords.to]), { padding: [50, 50] });
+    }
 
     return () => {
+      if ((driverLineRef as any).currentRouting) {
+        try { (driverLineRef as any).currentRouting.remove(); } catch (e) {}
+      }
       map.remove();
     };
   }, [ride]);
+
+  // geocode helper to attempt resolving addresses when coords are missing
+  const geocodeAddress = async (address: string) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+      );
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+      }
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  };
+
+  const tryGeocodeRide = async () => {
+    if (!ride) return;
+    const fromCoords = ride.from ? await geocodeAddress(ride.from) : null;
+    const toCoords = ride.to ? await geocodeAddress(ride.to) : null;
+
+    const updated = { ...ride, coords: { from: fromCoords ? [fromCoords.lat, fromCoords.lon] : null, to: toCoords ? [toCoords.lat, toCoords.lon] : null } };
+
+    // update localStorage createdRides if this ride is part of createdRides
+    try {
+      const created = JSON.parse(localStorage.getItem("createdRides") || "[]");
+      const idx = created.findIndex((r: any) => r.id === ride.id);
+      if (idx >= 0) {
+        created[idx] = updated;
+        localStorage.setItem("createdRides", JSON.stringify(created));
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // refresh rides state so map can initialize
+    setRides((prev: any) => prev.map((r: any) => (r.id === updated.id ? updated : r)));
+  };
 
   const getInitials = (name: string) => {
     return name.split(" ").map(n => n[0]).join("").toUpperCase();
@@ -136,6 +242,71 @@ const Map = () => {
     return (
       <div className="flex items-center justify-center h-screen text-lg font-semibold">
         Carona não encontrada 🚗
+      </div>
+    );
+  }
+
+  const coordsMissing = !ride.coords || !ride.coords.from || !ride.coords.to;
+
+  if (coordsMissing) {
+    return (
+      <div className="flex flex-col md:flex-row h-screen">
+        <div className="w-full md:w-2/3 h-1/2 md:h-full flex items-center justify-center bg-muted">
+          <div className="text-center p-6">
+            <h3 className="text-xl font-semibold mb-2">Endereços sem coordenadas</h3>
+            <p className="mb-4">Não foi possível obter coordenadas para os endereços informados.</p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={tryGeocodeRide}>Tentar geocodificar novamente</Button>
+              <Button variant="outline" onClick={() => window.history.back()}>Voltar</Button>
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">Origem: {ride.from}</p>
+            <p className="text-sm text-muted-foreground">Destino: {ride.to}</p>
+          </div>
+        </div>
+
+        {/* Painel de Match com Motorista (mostra informações mesmo sem mapa) */}
+        <div className="w-full md:w-1/3 h-1/2 md:h-full overflow-y-auto bg-background md:border-l border-t md:border-t-0">
+          <div className="p-6 space-y-6">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Match com Motorista</h2>
+            </div>
+            <Card className="border-0 bg-gradient-card">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col items-center space-y-3">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={ride.driverAvatar} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-lg">{getInitials(ride.driverName)}</AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold">{ride.driverName}</h3>
+                    <div className="flex items-center justify-center space-x-1 mt-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">{ride.rating}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm">Compatibilidade</span>
+                    <span className="text-lg font-bold text-success">{ride.matchPercentage}%</span>
+                  </div>
+                </div>
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex items-center space-x-2 text-sm">
+                    <MapPin className="h-4 w-4 text-success" />
+                    <span>{ride.from}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm">
+                    <MapPin className="h-4 w-4 text-destructive" />
+                    <span>{ride.to}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }

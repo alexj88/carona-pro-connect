@@ -253,12 +253,16 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       </div>
 
       <CreateRideModal
-        isOpen={showCreateRide}
-        onClose={() => setShowCreateRide(false)}
-        onCreateRide={(rideData) => {
-          console.log("Creating ride:", rideData);
-          setShowCreateRide(false);
-        }}
+            isOpen={showCreateRide}
+            onClose={() => setShowCreateRide(false)}
+            onCreateRide={(rideData) => {
+              console.log("Creating ride:", rideData);
+              setShowCreateRide(false);
+              // navigate to new ride map if we have an id
+              if ((rideData as any).id) {
+                navigate(`/map/${(rideData as any).id}`);
+              }
+            }}
       />
     </div>
   );

@@ -10,6 +10,19 @@ import Map from "./pages/Map";
 import UsuarioPage from "./pages/UsuarioPage";
 import MotoristaPage from "./pages/MotoristasPage";
 import CorridaPage from "./pages/CorridaPage";
+import Dashboard from "./components/Dashboard";
+
+// Wrapper para ler user do localStorage em runtime e passar para o Dashboard
+const DashboardRoute = () => {
+  let email = "";
+  try {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (saved) email = JSON.parse(saved).email || "";
+  } catch (e) {
+    // ignore
+  }
+  return <Dashboard userEmail={email} />;
+};
 
 const queryClient = new QueryClient();
 
@@ -22,6 +35,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
+          <Route path="/dashboard" element={<DashboardRoute />} />
           <Route path="/map/:rideId" element={<Map />} />
           
           {/* ROTAS DE ADMIN */}

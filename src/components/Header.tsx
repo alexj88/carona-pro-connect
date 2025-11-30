@@ -31,6 +31,17 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
     if (saved) {
       setUser(JSON.parse(saved));
     }
+  }, [isLoggedIn]);
+
+  // Atualiza usuário quando o login acontece em outro lugar (LoginModal dispara 'userLogin')
+  useEffect(() => {
+    const onUserLogin = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) setUser(detail);
+    };
+
+    window.addEventListener("userLogin", onUserLogin as EventListener);
+    return () => window.removeEventListener("userLogin", onUserLogin as EventListener);
   }, []);
 
   // Fecha menu de status ao clicar fora
@@ -76,6 +87,18 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
         </div>
 
         <nav className="hidden md:flex items-center space-x-6">
+          {user ? (
+            <Link to="/dashboard" className="text-foreground/80 hover:text-primary transition-colors">
+              Início
+            </Link>
+          ) : (
+            <Link to="/" className="text-foreground/80 hover:text-primary transition-colors">
+              Início
+            </Link>
+          )}
+        </nav>
+
+        <nav className="hidden md:flex items-center space-x-6">
           <Link
             to="/about"
             className="text-foreground/80 hover:text-primary transition-colors"
@@ -83,23 +106,6 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
             Sobre
           </Link>
         </nav>
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link
-            to="/dashboard"
-            className="text-foreground/80 hover:text-primary transition-colors"
-          >
-            Dashboard
-          </Link>
-        </nav>
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link
-            to=""
-            className="text-foreground/80 hover:text-primary transition-colors"
-          >
-            Caronas
-          </Link>
-        </nav>
-
         <div className="flex items-center space-x-3">
           {user ? (
             <div className="flex items-center space-x-3">

@@ -1,9 +1,12 @@
 import React from "react";
 import heroBg from "@/assets/hero-rideshare.jpg";
+import Header from "@/components/Header";
 
 const About: React.FC = () => {
   return (
-    <div
+    <div>
+      <Header />
+      <div
       className="relative min-h-screen flex items-center justify-center"
       style={{
         backgroundImage: `url(${heroBg})`,
@@ -45,6 +48,7 @@ const About: React.FC = () => {
         <p className="mt-8 text-center text-white/60">&copy; {new Date().getFullYear()} Carona Pro Connect. Todos os direitos reservados.</p>
       </div>
     </div>
+  </div>
   );
 };
 
