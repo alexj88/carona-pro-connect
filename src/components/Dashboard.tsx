@@ -22,9 +22,25 @@ interface Driver {
   id: number;
   nome: string; // Adapte os campos conforme o retorno real do seu GET /api/motoristas
   email: string;
+  veiculo?: string;
+  placa?: string;
   avaliacao?: number; 
   localizacao_atual?: string; 
+  // Propriedades do MOCK que o RideCard ainda espera (e que precisam ser corrigidas no backend):
+  driverName: string; // Vai ser mapeado para 'nome'
+  driverAvatar: string;
+  from: string; // Vai ser mapeado para 'localizacao_atual'
+  to: string;
+  time: string;
+  date: string;
+  availableSeats: number;
+  totalSeats: number;
+  rating: number; // Vai ser mapeado para 'avaliacao'
+  price: number;
+  group: string;
+  tags: string[];
 }
+
 
 interface Group {
   name: string;
@@ -140,13 +156,31 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
 
               {/* Rides Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRides.map((ride) => (
+                {filteredRides.map((backendDriver) => {
+    // Mapeia o objeto do Backend (backendDriver) para o formato que o RideCard espera
+    const mappedRide = {
+        id: String(backendDriver.id),
+        driverName: backendDriver.nome, // Corrigido
+        driverAvatar: "AS", // Mock temporário
+        from: backendDriver.localizacao_atual || "Origem não informada", // Use o campo real
+        to: "Destino Padrão", // Mock temporário até ter o campo no backend
+        time: "08:00", // Mock temporário
+        date: "18/09", // Mock temporário
+        availableSeats: 3, // Mock temporário
+        totalSeats: 4, // Mock temporário
+        rating: backendDriver.avaliacao || 4.5, // Use o campo real
+        price: 10, // Mock temporário
+        group: "Tecnologia", // Mock temporário
+        tags: ["Regular", "Não fumante"], // Mock temporário
+    };
+    return (
                   <RideCard
-                    key={ride.id}
-                    ride={ride}
+                    key={mappedRide.id}
+                    ride={mappedRide}
                     onJoinRide={handleJoinRide}
                   />
-                ))}
+                );
+})}
               </div>
 
               {filteredRides.length === 0 && (
@@ -164,7 +198,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
 
             <TabsContent value="groups" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockGroups.map((group, index) => (
+                {groups.map((group, index) => (
                   <Card
                     key={index}
                     className="bg-gradient-card border-0 hover:shadow-card transition-all duration-300"

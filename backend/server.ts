@@ -28,7 +28,11 @@ app.get('/api', (req, res) => {
 // Rota para buscar motoristas
 app.get('/api/motoristas', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM motoristas');
+    const result = await query(
+        `SELECT
+            id, nome, email, veiculo, placa, avaliacao, localizacao_atual
+        FROM motoristas`
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
