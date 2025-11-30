@@ -63,6 +63,37 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     // Aqui seria implementada a lógica para solicitar participação na carona
   };
 
+  const fetchAvailableRides = async () => {
+    setLoading(true); // Ativa o estado de carregamento
+    setError(null);
+    try {
+      // Faz a requisição para a rota do backend que lista os motoristas
+      // Assumindo que o backend está rodando em http://localhost:3001
+      const response = await fetch('http://localhost:3001/api/motoristas'); 
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao carregar motoristas. Status: ${response.status}`);
+      }
+      
+      // Converte a resposta para JSON
+      const data = await response.json(); 
+      
+      // Preenche o estado 'rides' com os motoristas reais
+      setRides(data); 
+      
+      // *Se você tiver uma rota para grupos, faria a busca aqui*
+      
+    } catch (err) {
+      console.error("Erro na API ao buscar motoristas:", err);
+      // Trata e armazena a mensagem de erro no estado 'error'
+      setError((err instanceof Error) ? err.message : 'Ocorreu um erro desconhecido na busca.');
+    } finally {
+      setLoading(false); // Finaliza o carregamento
+    }
+  };
+
+  
+
   const filteredRides = rides.filter(
     (ride) =>{
       const term = searchTerm.toLowerCase();
