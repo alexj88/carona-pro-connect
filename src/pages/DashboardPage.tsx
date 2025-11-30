@@ -1,4 +1,8 @@
 import Dashboard from "@/components/Dashboard";
+import Header from "@/components/Header";
 export default function DashboardPage() {
-  return <Dashboard userEmail="teste@teste.com" />;
+  return ( <div>
+      <Header />
+      <Dashboard userEmail="teste@teste.com" />
+    </div>)
 }
