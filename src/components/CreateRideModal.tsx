@@ -197,7 +197,7 @@ const CreateRideModal = ({
                 <div className="space-y-2">
                   <Label htmlFor="seats">Vagas disponíveis</Label>
                   <Select
-                    value={formData.availableSeats} // ✅ Agora com nome correto
+                    value={formData.availableSeats} 
                     onValueChange={(value) =>
                       handleInputChange("availableSeats", value)
                     } // ✅ Corrigido para "availableSeats"
