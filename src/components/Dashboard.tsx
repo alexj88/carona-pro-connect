@@ -189,46 +189,78 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
               </div>
 
               {/* Rides Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRides.map((backendDriver) => {
-    // Mapeia o objeto do Backend (backendDriver) para o formato que o RideCard espera
-    const mappedRide = {
-        id: String(backendDriver.id),
-        driverName: backendDriver.nome, // Corrigido
-        driverAvatar: "AS", // Mock temporário
-        from: backendDriver.localizacao_atual || "Origem não informada", // Use o campo real
-        to: "Destino Padrão", // Mock temporário até ter o campo no backend
-        time: "08:00", // Mock temporário
-        date: "18/09", // Mock temporário
-        availableSeats: 3, // Mock temporário
-        totalSeats: 4, // Mock temporário
-        rating: backendDriver.avaliacao || 4.5, // Use o campo real
-        price: 10, // Mock temporário
-        group: "Tecnologia", // Mock temporário
-        tags: ["Regular", "Não fumante"], // Mock temporário
-    };
-    return (
-                  <RideCard
-                    key={mappedRide.id}
-                    ride={mappedRide}
-                    onJoinRide={handleJoinRide}
-                  />
-                );
-})}
-              </div>
+    <div className="text-center py-12 text-lg text-red-500">
+      Erro ao buscar caronas: {error}. Verifique se o backend está rodando.
+    </div>
+  
 
-              {filteredRides.length === 0 && (
-                <div className="text-center py-12">
-                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Nenhuma carona encontrada
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Tente ajustar sua busca ou crie uma nova carona
-                  </p>
-                </div>
-              )}
-            </TabsContent>
+  {/* 2. MOSTRA MENSAGEM DE CARREGAMENTO (Tratamento do estado 'loading') */}
+  {!error && loading && (
+    <div className="text-center py-12 text-lg text-muted-foreground">
+      Carregando caronas disponíveis... 🚗💨
+    </div>
+  )}
+
+  {/* 3. CONTEÚDO PRINCIPAL (Mostra a lista se a busca terminou sem erro) */}
+  {!error && !loading && (
+    <>
+      {/* Verifica se encontrou resultados após o filtro */}
+      {filteredRides.length > 0 ? (
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRides.map((backendDriver) => {
+              // BLOCO DE MAPEAMENTO CORRIGIDO (Onde você adapta os dados do backend para o RideCard)
+              const mappedRide = {
+ // ID: Garante que o ID existe e é uma string
+        id: String(backendDriver.id ?? Date.now()), 
+
+        // NOME DO MOTORISTA: Usa 'Nome Indefinido' se o campo 'nome' estiver nulo
+        driverName: backendDriver.nome ?? "Motorista Indefinido", 
+        
+        // DADOS DO VEÍCULO (Se você estiver buscando estes dados na API de Motoristas):
+        // Se backendDriver.veiculo fosse o nome do veículo, você o usaria aqui.
+        // Já que você está usando o Motorista como Carona, vou manter o resto como mock,
+        // mas tratando os campos que vieram do backend:
+        
+        driverAvatar: "AS", // Mock
+        from: backendDriver.localizacao_atual ?? "Origem não informada", 
+        to: "Destino Padrão", // Mock
+        time: "08:00", // Mock
+        date: "18/09", // Mock
+        availableSeats: 3, // Mock
+        totalSeats: 4, // Mock
+        // AVALIAÇÃO: Usa 4.5 como padrão se o campo 'avaliacao' estiver nulo
+        rating: backendDriver.avaliacao ?? 4.5, 
+        price: 10, // Mock
+        group: "Tecnologia", // Mock
+        tags: ["Regular", "Não fumante"], // Mock
+    };
+
+              return (
+                  <RideCard 
+                      key={mappedRide.id} 
+                      ride={mappedRide} 
+                      onJoinRide={handleJoinRide} 
+                  />
+              );
+          })}
+        </div>
+        
+      ) : (
+        // 4. MENSAGEM DE LISTA VAZIA (Se a busca terminou, mas o filtro não encontrou nada)
+        <div className="text-center py-12">
+          <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Nenhuma carona encontrada
+          </h3>
+          <p className="text-muted-foreground">
+            Tente ajustar sua busca ou crie uma nova carona.
+          </p>
+        </div>
+      )}
+    </>
+  )}
+</TabsContent>
 
             <TabsContent value="groups" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -293,9 +325,10 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       <CreateRideModal
         isOpen={showCreateRide}
         onClose={() => setShowCreateRide(false)}
-        onCreateRide={(rideData) => {
+        onCreateRide={async (rideData) => {
           console.log("Creating ride:", rideData);
           setShowCreateRide(false);
+          await fetchAvailableRides(); // Recarrega as caronas após criar uma nova
         }}
       />
     </div>
