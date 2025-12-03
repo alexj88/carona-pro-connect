@@ -18,29 +18,22 @@ interface DashboardProps {
   userEmail: string;
 }
 
-interface Driver {
-  id: number;
-  nome: string; // Adapte os campos conforme o retorno real do seu GET /api/motoristas
-  email: string;
-  veiculo?: string;
-  placa?: string;
-  avaliacao?: number; 
-  localizacao_atual?: string; 
-  // Propriedades do MOCK que o RideCard ainda espera (e que precisam ser corrigidas no backend):
-  driverName: string; // Vai ser mapeado para 'nome'
-  driverAvatar: string;
-  from: string; // Vai ser mapeado para 'localizacao_atual'
-  to: string;
-  time: string;
-  date: string;
-  availableSeats: number;
-  totalSeats: number;
-  rating: number; // Vai ser mapeado para 'avaliacao'
-  price: number;
-  group: string;
-  tags: string[];
+//  1. O tipo exato que VEM DO BACKEND (o que você vê no Postman)
+interface DriverDB {
+    id: number;
+    nome: string;
+    email: string;
+    veiculo: string;
+    placa: string;
+    // Campos que podem ser NULL no BD devem ter '| null'
+    avaliacao: number | null; 
+    localizacao_atual: string | null;
+    data_criacao: string;
+    // Adicione qualquer outro campo que o seu SELECT * FROM motoristas retorne
 }
-
+// O tipo para o estado 'rides' no Dashboard
+// Vamos usar o tipo DriverDB para o estado:
+type Driver = DriverDB;
 
 interface Group {
   name: string;
@@ -50,9 +43,9 @@ interface Group {
 
 const Dashboard = ({ userEmail }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showCreateRide, setShowCreateRide] = useState(false);
+  const [showCreateRide, setShowCreateRide] = useState<boolean>(false);
 
-  const [rides, setRides] = useState<Driver[]>([]); 
+  const [rides, setRides] = useState<DriverDB[]>([]); 
   const [groups, setGroups] = useState<Group[]>([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,9 +70,25 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       
       // Converte a resposta para JSON
       const data = await response.json(); 
+      const sanitizedRides: DriverDB[] = data.map((driver: any) => ({
+        // Use ?? para garantir que o campo não seja null se o tipo for string/number
+        id: driver.id || 0, // Se o ID for o único campo que pode ser 0, ajuste
+        nome: driver.nome || 'Sem Nome', 
+        email: driver.email || '',
+        veiculo: driver.veiculo || 'Não Informado',
+        placa: driver.placa || '0000',
+        
+        // Se seus motoristas não têm esses campos, mas você os exige na interface Driver,
+        // você deve fornecer um valor padrão aqui para evitar a quebra:
+        avaliacao: driver.avaliacao || 4.5,
+        localizacao_atual: driver.localizacao_atual || null,
+        data_criacao: driver.data_criacao || ''
       
+        // Se houver campos que vêm do banco que a interface Driver NÃO tem, 
+        // eles são descartados aqui, limpando o objeto.
+        }));
       // Preenche o estado 'rides' com os motoristas reais
-      setRides(data); 
+      setRides(sanitizedRides); 
       
       // *Se você tiver uma rota para grupos, faria a busca aqui*
       
@@ -93,17 +102,23 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
   };
 
   useEffect(() => {
-    // Importante: O useEffect precisa importar o hook 'useEffect' do 'react'
+ //    Importante: O useEffect precisa importar o hook 'useEffect' do 'react'
     fetchAvailableRides();
   }, []); // O array vazio [] garante que a função é chamada apenas UMA VEZ.
 
   const filteredRides = rides.filter(
     (ride) =>{
       const term = searchTerm.toLowerCase();
-      return ride.nome.toLowerCase().includes(term) ||
-             // Filtra pelo 'email' ou 'veiculo', se quiser adicionar mais opções de busca
-             ride.email.toLowerCase().includes(term); 
-             // Se você tivesse um campo 'localizacao', usaria: || ride.localizacao.toLowerCase().includes(term);
+      // Filtra pelo NOME (Substituindo o antigo ride.driverName)
+      const nomeMatch = ride.nome?.toLowerCase().includes(term); 
+      
+      // Filtra pela LOCALIZAÇÃO (Substituindo os antigos ride.from/ride.to)
+      const locationMatch = ride.localizacao_atual?.toLowerCase().includes(term);
+
+      // Filtra pelo VEÍCULO 
+      const vehicleMatch = ride.veiculo?.toLowerCase().includes(term);
+      
+      return nomeMatch || locationMatch || vehicleMatch;
     }
   );
 
@@ -209,39 +224,37 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRides.map((backendDriver) => {
-              // BLOCO DE MAPEAMENTO CORRIGIDO (Onde você adapta os dados do backend para o RideCard)
-              const mappedRide = {
- // ID: Garante que o ID existe e é uma string
-        id: String(backendDriver.id ?? Date.now()), 
+     const driver = backendDriver || {}; // Garante que é um objeto, mesmo que vazio
 
-        // NOME DO MOTORISTA: Usa 'Nome Indefinido' se o campo 'nome' estiver nulo
-        driverName: backendDriver.nome ?? "Motorista Indefinido", 
+    // VERIFICAÇÃO 2: MAPEAMENTO ULTRASSEGURO
+    // Use o operador de coalescência nula (??) em CADA CAMPO que vem do backend.
+    const mappedRide = {
+        // PROPRIEDADES DO BACKEND (DriverDB) - Conversão e Proteção
+        id: String(backendDriver.id ?? Date.now()), // Protege o ID, garantindo string
+        driverName: backendDriver.nome ?? 'Motorista Desconhecido',
         
-        // DADOS DO VEÍCULO (Se você estiver buscando estes dados na API de Motoristas):
-        // Se backendDriver.veiculo fosse o nome do veículo, você o usaria aqui.
-        // Já que você está usando o Motorista como Carona, vou manter o resto como mock,
-        // mas tratando os campos que vieram do backend:
-        
-        driverAvatar: "AS", // Mock
-        from: backendDriver.localizacao_atual ?? "Origem não informada", 
-        to: "Destino Padrão", // Mock
-        time: "08:00", // Mock
-        date: "18/09", // Mock
-        availableSeats: 3, // Mock
-        totalSeats: 4, // Mock
-        // AVALIAÇÃO: Usa 4.5 como padrão se o campo 'avaliacao' estiver nulo
-        rating: backendDriver.avaliacao ?? 4.5, 
-        price: 10, // Mock
-        group: "Tecnologia", // Mock
-        tags: ["Regular", "Não fumante"], // Mock
+        // PROPRIEDADES HÍBRIDAS/MOCKADAS (Que usam dados do backend, mas têm fallback)
+        from: backendDriver.localizacao_atual ?? "Origem Não Definida",
+        rating: Number(backendDriver.avaliacao) ?? 4.5, // Garante um número (ou o que o RideCard espera)
+
+        // PROPRIEDADES MOCKADAS (Que o RideCard espera, mas NÃO EXISTEM no backend)
+        driverAvatar: "AS", 
+        to: "Destino Padrão (Sem Destino no BD)", 
+        time: "08:00", 
+        date: "18/09", 
+        availableSeats: 3, 
+        totalSeats: 4, 
+        price: 10, 
+        group: "Tecnologia", 
+        tags: ["Regular", "Não fumante"], 
+        // CERTIFIQUE-SE DE QUE ESTA LISTA DE PROPRIEDADES É IDÊNTICA À PROPS DO SEU RideCard
     };
-
               return (
                   <RideCard 
-                      key={mappedRide.id} 
-                      ride={mappedRide} 
-                      onJoinRide={handleJoinRide} 
-                  />
+            key={mappedRide.id} 
+            ride={mappedRide} 
+            onJoinRide={handleJoinRide} 
+        />
               );
           })}
         </div>
@@ -322,14 +335,20 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
         </div>
       </div>
 
-      <CreateRideModal
-        isOpen={showCreateRide}
-        onClose={() => setShowCreateRide(false)}
-        onCreateRide={async (rideData) => {
-          console.log("Creating ride:", rideData);
-          setShowCreateRide(false);
-          await fetchAvailableRides(); // Recarrega as caronas após criar uma nova
-        }}
+     <CreateRideModal
+  isOpen={!!showCreateRide}
+  onClose={() => setShowCreateRide(false)}  
+  // Torne a função async
+  onCreateRide={async (rideData) => { 
+    // ** LÓGICA DE CRIAÇÃO DA API ** (Assumindo que está em outro arquivo/função)
+    // Ex: const newRide = await api.createRide(rideData); 
+    
+    // Fechar o modal
+    setShowCreateRide(false); 
+    
+    // RECARRERGAR A LISTA DE CARONAS (atualiza o dashboard)
+    await fetchAvailableRides(); 
+  }}
       />
     </div>
   );
