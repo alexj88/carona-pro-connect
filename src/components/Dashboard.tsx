@@ -45,6 +45,9 @@ interface RideDB {
     id: number;
     motorista_id: number; // Chave estrangeira
     origem: string;
+    nome: string;
+    veiculo: string;
+    localizacao_atual: string;
     destino: string;
     horario: string;
     vagas: number;
@@ -59,7 +62,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateRide, setShowCreateRide] = useState<boolean>(false);
 
-  const [rides, setRides] = useState<DriverDB[]>([]); 
+  const [rides, setRides] = useState<RideDB[]>([]); 
   const [groups, setGroups] = useState<Group[]>([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +79,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     try {
       // Faz a requisição para a rota do backend que lista os motoristas
       // Assumindo que o backend está rodando em http://localhost:3001
-      const response = await fetch('http://localhost:3001/api/motoristas'); 
+      const response = await fetch('http://localhost:3001/api/corridas'); 
       
       if (!response.ok) {
         // Se o status NÃO for 200-299, mostre o status exato.
@@ -86,26 +89,10 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       }
       
       // Converte a resposta para JSON
-      const data = await response.json(); 
-      const sanitizedRides: DriverDB[] = data.map((driver: any) => ({         
-        // Use ?? para garantir que o campo não seja null se o tipo for string/number
-        id: String(driver.id ?? Date.now()),
-        nome: driver.nome ?? 'Sem Nome',
-        email: driver.email || '',
-        veiculo: driver.veiculo || 'Não Informado',
-        placa: driver.placa || '0000',
-        
-        // Se seus motoristas não têm esses campos, mas você os exige na interface Driver,
-        // você deve fornecer um valor padrão aqui para evitar a quebra:
-        avaliacao: driver.avaliacao || 4.5,
-        localizacao_atual: driver.localizacao_atual || null,
-        data_criacao: driver.data_criacao || ''
-      
-        // Se houver campos que vêm do banco que a interface Driver NÃO tem, 
-        // eles são descartados aqui, limpando o objeto.
-        }));
+      const data: RideDB[] = await response.json(); 
+
       // Preenche o estado 'rides' com os motoristas reais
-      setRides(sanitizedRides); 
+      setRides(data); 
       
       // *Se você tiver uma rota para grupos, faria a busca aqui*
       
@@ -239,31 +226,33 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       {filteredRides.length > 0 ? (
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRides.map((backendDriver) => {
-     const driver = backendDriver || {}; // Garante que é um objeto, mesmo que vazio
-
+          {filteredRides.map((backendRide) => {
+     const ride = backendRide || {} as RideDB; // Garante que é um objeto, mesmo que vazio
+            // ERRO: 'motorista_id' pode ser o campo que o TS reclama.
+    if (!ride.id) return null; // Ignora se o ID for inválido (Proteção)
     // VERIFICAÇÃO 2: MAPEAMENTO ULTRASSEGURO
     // Use o operador de coalescência nula (??) em CADA CAMPO que vem do backend.
     const mappedRide = {
-        // PROPRIEDADES DO BACKEND (DriverDB) - Conversão e Proteção
-        id: String(backendDriver.id ?? Date.now()), // Protege o ID, garantindo string
-        driverName: backendDriver.nome ?? 'Motorista Desconhecido',
+        // Mapeamento dos campos do BD (RideDB) para o RideCardProps
+        id: String(ride.id ?? Date.now()), 
+        driverName: 'Motorista ID ' + (ride.motorista_id ?? 0), // 🚨 ATENÇÃO: Motorista_id é um número, não o nome.
         
-        // PROPRIEDADES HÍBRIDAS/MOCKADAS (Que usam dados do backend, mas têm fallback)
-        from: backendDriver.localizacao_atual ?? "Origem Não Definida",
-        rating: Number(backendDriver.avaliacao) ?? 4.5, // Garante um número (ou o que o RideCard espera)
+        
+        // Mapeamento de local/horário/vagas:
+        from: ride.origem ?? "Origem Não Definida",
+        to: ride.destino ?? "Destino Não Definido",
+        time: ride.horario ?? "Horário Indefinido",
+        availableSeats: Number(ride.vagas) || 0, // Mapeia 'vagas' para 'availableSeats'
 
-        // PROPRIEDADES MOCKADAS (Que o RideCard espera, mas NÃO EXISTEM no backend)
+        // PROPRIEDADES MOCKADAS (Que o RideCard exige, mas a tabela 'corridas' não tem)
         driverAvatar: "AS", 
-        to: "Destino Padrão (Sem Destino no BD)", 
-        time: "08:00", 
-        date: "18/09", 
-        availableSeats: 3, 
-        totalSeats: 4, 
-        price: 10, 
+        date: "18/09", // Não existe na sua tabela de corridas
+        totalSeats: (Number(ride.vagas) || 0) + 1, // Exemplo de mock para totalSeats
+        rating: 4.5, 
+        price: Number(ride.preco) || 10, 
         group: "Tecnologia", 
         tags: ["Regular", "Não fumante"], 
-        // CERTIFIQUE-SE DE QUE ESTA LISTA DE PROPRIEDADES É IDÊNTICA À PROPS DO SEU RideCard
+        // ...
     };
               return (
                   <RideCard 
