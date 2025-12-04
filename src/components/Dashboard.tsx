@@ -65,15 +65,18 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       const response = await fetch('http://localhost:3001/api/motoristas'); 
       
       if (!response.ok) {
-        throw new Error(`Erro ao carregar motoristas. Status: ${response.status}`);
+        // Se o status NÃO for 200-299, mostre o status exato.
+            const errorText = `Falha HTTP: ${response.status} ${response.statusText}`;
+            console.error("ERRO DE BUSCA API:", errorText);
+            throw new Error(errorText); // Dispara o erro detalhado
       }
       
       // Converte a resposta para JSON
       const data = await response.json(); 
-      const sanitizedRides: DriverDB[] = data.map((driver: any) => ({
+      const sanitizedRides: DriverDB[] = data.map((driver: any) => ({         
         // Use ?? para garantir que o campo não seja null se o tipo for string/number
-        id: driver.id || 0, // Se o ID for o único campo que pode ser 0, ajuste
-        nome: driver.nome || 'Sem Nome', 
+        id: String(driver.id ?? Date.now()),
+        nome: driver.nome ?? 'Sem Nome',
         email: driver.email || '',
         veiculo: driver.veiculo || 'Não Informado',
         placa: driver.placa || '0000',
@@ -93,13 +96,12 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
       // *Se você tiver uma rota para grupos, faria a busca aqui*
       
     } catch (err) {
-      console.error("Erro na API ao buscar motoristas:", err);
-      // Trata e armazena a mensagem de erro no estado 'error'
-      setError((err instanceof Error) ? err.message : 'Ocorreu um erro desconhecido na busca.');
+        console.error("Erro na busca de caronas (Catch):", err);
+        setError(`Erro ao buscar caronas. Detalhes: ${err.message || 'Verifique o console.'}`);
     } finally {
-      setLoading(false); // Finaliza o carregamento
+        setLoading(false);
     }
-  };
+};
 
   useEffect(() => {
  //    Importante: O useEffect precisa importar o hook 'useEffect' do 'react'
@@ -345,7 +347,7 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     
     // Fechar o modal
     setShowCreateRide(false); 
-    
+
     // RECARRERGAR A LISTA DE CARONAS (atualiza o dashboard)
     await fetchAvailableRides(); 
   }}
