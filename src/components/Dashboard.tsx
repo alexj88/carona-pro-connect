@@ -41,6 +41,20 @@ interface Group {
   rides: number;
 }
 
+interface RideDB {
+    id: number;
+    motorista_id: number; // Chave estrangeira
+    origem: string;
+    destino: string;
+    horario: string;
+    vagas: number;
+    preco: number;
+    passageiro_id: number;
+    status: string;
+    data_solicitacao: string;
+    data_conclusao: string | null;
+}
+
 const Dashboard = ({ userEmail }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateRide, setShowCreateRide] = useState<boolean>(false);
