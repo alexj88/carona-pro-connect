@@ -27,6 +27,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { MapPin, Clock, Users, DollarSign, Calendar } from "lucide-react";
 import RideCard from "./RideCard";
+import MapView from "@/components/MapView";
 
 interface CreateRideModalProps {
   isOpen: boolean;
@@ -68,23 +69,102 @@ const CreateRideModal = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const rideData = {
-      from: formData.from,
-      to: formData.to,
-      time: formData.time,
-      date: formData.date,
-      seats: parseInt(formData.availableSeats) || 0, // ✅ Agora com nome correto
-  // price removed per request
-      description: formData.description,
-      group: formData.group,
-      isRecurring: formData.isRecurring,
-      allowSmoking: formData.allowSmoking,
-      hasAirConditioning: formData.hasAirConditioning,
-      acceptsPets: formData.acceptsPets,
+    const geocode = async (address: string) => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            address
+          )}&limit=1`
+        );
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        }
+      } catch (err) {
+        // ignore
+      }
+      return null;
     };
 
-    onCreateRide(rideData); // ✅ Agora passando rideData convertido
+    (async () => {
+      // try to geocode origin and destination
+      const fromCoords = formData.from ? await geocode(formData.from) : null;
+      const toCoords = formData.to ? await geocode(formData.to) : null;
+
+      const id = Date.now().toString();
+
+      const seats = parseInt(formData.availableSeats) || 0;
+      const rideData = {
+        id,
+        driverName: "Você",
+        from: formData.from,
+        to: formData.to,
+        time: formData.time,
+        date: formData.date,
+        availableSeats: seats,
+        totalSeats: seats || 1,
+        rating: 5,
+        group: formData.group,
+        tags: [],
+        driverAvatar: "",
+        phone: "",
+        matchPercentage: 100,
+        sharedInterests: [],
+        coords: {
+          from: fromCoords ? [fromCoords.lat, fromCoords.lon] : null,
+          to: toCoords ? [toCoords.lat, toCoords.lon] : null,
+        },
+        description: formData.description,
+        isRecurring: formData.isRecurring,
+        allowSmoking: formData.allowSmoking,
+        hasAirConditioning: formData.hasAirConditioning,
+        acceptsPets: formData.acceptsPets,
+      };
+
+      // save created rides to localStorage so Map can load them
+      try {
+        const existing = JSON.parse(localStorage.getItem("createdRides") || "[]");
+        existing.push(rideData);
+        localStorage.setItem("createdRides", JSON.stringify(existing));
+        // set local preview state
+        setCreatedRide(rideData as any);
+        setCreatedSaved(true);
+      } catch (e) {
+        localStorage.setItem("createdRides", JSON.stringify([rideData]));
+        setCreatedRide(rideData as any);
+        setCreatedSaved(true);
+      }
+
+      console.log("Created ride:", rideData);
+
+      // Chamamos onCreateRide com o formato esperado pelo pai (prop types)
+      const apiRide = {
+        from: rideData.from,
+        to: rideData.to,
+        time: rideData.time,
+        date: rideData.date,
+        seats: seats,
+        description: rideData.description,
+        group: rideData.group,
+        isRecurring: rideData.isRecurring,
+        allowSmoking: rideData.allowSmoking,
+        hasAirConditioning: rideData.hasAirConditioning,
+        acceptsPets: rideData.acceptsPets,
+      };
+
+      onCreateRide(apiRide);
+      // keep modal open and show inline preview map
+      setTimeout(() => {
+        const el = document.getElementById("create-ride-map");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 200);
+    })().catch((err) => {
+      console.error("Error creating ride:", err);
+    });
   };
+
+  const [createdSaved, setCreatedSaved] = useState(false);
+  const [createdRide, setCreatedRide] = useState<any | null>(null);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -312,6 +392,46 @@ const CreateRideModal = ({
             </Button>
           </div>
         </form>
+
+        {/* Preview do mapa após criação */}
+        {createdSaved && createdRide && (
+          <div id="create-ride-map" className="mt-6">
+            <h3 className="text-lg font-semibold mb-2">Visualizar Rota</h3>
+            <div className="h-72 w-full rounded-md overflow-hidden border">
+              <MapView
+                rideData={
+                  createdRide && createdRide.coords && createdRide.coords.from && createdRide.coords.to
+                    ? {
+                        currentLocation: createdRide.from,
+                        destination: createdRide.to,
+                        currentCoords: createdRide.coords.from,
+                        destinationCoords: createdRide.coords.to,
+                      }
+                    : undefined
+                }
+              />
+            </div>
+
+            <div className="flex gap-2 mt-3">
+              <Button
+                variant="gradient"
+                onClick={() => window.open(`${window.location.origin}/map/${createdRide.id}`, "_blank")}
+              >
+                Abrir mapa completo
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const url = `${window.location.origin}/map/${createdRide.id}`;
+                  navigator.clipboard?.writeText(url);
+                  alert("Link copiado: " + url);
+                }}
+              >
+                Copiar link
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

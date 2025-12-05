@@ -13,6 +13,20 @@ import CorridaPage from "./pages/CorridaPage";
 import Dashboard from "./pages/DashboardPage";
 import Ride from "./pages/Ride";
 import MapPage from "./pages/MapPage";
+import ErrorBoundary from "./components/ErrorBoundary";
+
+
+// Wrapper para ler user do localStorage em runtime e passar para o Dashboard
+const DashboardRoute = () => {
+  let email = "";
+  try {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (saved) email = JSON.parse(saved).email || "";
+  } catch (e) {
+    // ignore
+  }
+  return <Dashboard userEmail={email} />;
+};
 
 const queryClient = new QueryClient();
 
@@ -22,9 +36,11 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
+          <Route path="/dashboard" element={<DashboardRoute />} />
           <Route path="/map/:rideId" element={<Map />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -37,6 +53,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -44,35 +44,44 @@ export default function MapView({ rideData }: MapViewProps) {
         .addTo(map)
         .bindPopup(`<b>Destino:</b> ${rideData.destination}`);
 
-      // 🚗 **Rota de carro REAL**
-      routingControl = (L as any).Routing.control({
-        waypoints: [
-          L.latLng(rideData.currentCoords[0], rideData.currentCoords[1]),
-          L.latLng(
-            rideData.destinationCoords[0],
-            rideData.destinationCoords[1]
-          ),
-        ],
-        routeWhileDragging: false,
-        addWaypoints: true,
-        draggableWaypoints: false,
-        fitSelectedRoutes: true,
-        language: "pt-BR",
-        units: "metric",
-        show: false,
-        lineOptions: {
-          styles: [{ color: "blue", weight: 5 }],
-        },
-      }).addTo(map);
+      // 🚗 **Rota de carro REAL** (tenta com routing-machine, senão fallback para polyline)
+      try {
+        routingControl = (L as any).Routing.control({
+          waypoints: [
+            L.latLng(rideData.currentCoords[0], rideData.currentCoords[1]),
+            L.latLng(
+              rideData.destinationCoords[0],
+              rideData.destinationCoords[1]
+            ),
+          ],
+          routeWhileDragging: false,
+          addWaypoints: true,
+          draggableWaypoints: false,
+          fitSelectedRoutes: true,
+          language: "pt-BR",
+          units: "metric",
+          show: false,
+          lineOptions: {
+            styles: [{ color: "blue", weight: 5 }],
+          },
+        }).addTo(map);
+
+        // ensure map renders and fits
+        setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, 300);
+      } catch (err) {
+        // fallback: linha reta se routing-machine não funcionar
+        L.polyline([rideData.currentCoords, rideData.destinationCoords], { color: "#007bff", weight: 4, opacity: 0.7, dashArray: "10,6" }).addTo(map);
+      }
     }
 
+    // small invalidate after tiles load
+    setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, 100);
+
     return () => {
-      map.remove();
-      if (routingControl) {
-        routingControl.remove();
-      }
+      try { if (routingControl && routingControl.remove) routingControl.remove(); } catch (e) {}
+      try { map.remove(); } catch (e) {}
     };
   }, [rideData]);
 
-  return <div id="map" style={{ height: "100vh", width: "100%" }} />;
+  return <div id="map" style={{ height: "100%", width: "100%" }} />;
 }

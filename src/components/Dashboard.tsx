@@ -68,6 +68,19 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     },
   ];
 
+  // estado combinando mocks + caronas criadas localmente
+  const [rides, setRides] = useState(() => {
+    try {
+      const created = JSON.parse(localStorage.getItem("createdRides") || "[]");
+      if (Array.isArray(created) && created.length > 0) {
+        return [...mockRides, ...created];
+      }
+    } catch (e) {
+      // ignore
+    }
+    return mockRides;
+  });
+
   const mockGroups = [
     { name: "Tecnologia", members: 234, rides: 45 },
     { name: "Consultoria", members: 189, rides: 32 },
@@ -80,11 +93,11 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
     // Aqui seria implementada a lógica para solicitar participação na carona
   };
 
-  const filteredRides = mockRides.filter(
-    (ride) =>
-      ride.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ride.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ride.driverName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRides = rides.filter(
+    (ride: any) =>
+      (ride.from || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ride.to || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ride.driverName || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -155,17 +168,34 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filtros
-                </Button>
-                <Button
-                  variant="gradient"
-                  onClick={() => setShowCreateRide(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Carona
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                  <Button
+                    variant="gradient"
+                    onClick={() => setShowCreateRide(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Carona
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (!confirm("Deseja realmente limpar as caronas criadas localmente? Essa ação não pode ser desfeita.")) return;
+                      try {
+                        localStorage.removeItem("createdRides");
+                      } catch (e) {
+                        console.error(e);
+                      }
+                      setRides(mockRides as any);
+                      // reload page sections if needed
+                    }}
+                  >
+                    Limpar criadas
+                  </Button>
+                </div>
               </div>
 
               {/* Rides Grid */}
@@ -258,6 +288,23 @@ const Dashboard = ({ userEmail }: DashboardProps) => {
         onCreateRide={(rideData) => {
           console.log("Creating ride:", rideData);
           setShowCreateRide(false);
+          // reload created rides from localStorage and update state
+          try {
+            const created = JSON.parse(localStorage.getItem("createdRides") || "[]");
+            if (Array.isArray(created) && created.length > 0) {
+              const combined = [...mockRides, ...created];
+              setRides(combined as any);
+              // navigate to the last created ride if it has an id
+              const last = created[created.length - 1];
+              if (last && last.id) {
+                navigate(`/map/${last.id}`);
+              }
+            } else {
+              setRides(mockRides as any);
+            }
+          } catch (e) {
+            setRides(mockRides as any);
+          }
         }}
       />
     </div>

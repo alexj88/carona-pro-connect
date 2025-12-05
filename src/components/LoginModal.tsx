@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Mail, Lock, User, Building } from "lucide-react";
-import { useGoogleLogin, CredentialResponse, GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
+import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -28,6 +27,9 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
+      const userData = { email, name: "Usuário Local", picture: "" };
+      localStorage.setItem("user", JSON.stringify(userData));
+      window.dispatchEvent(new CustomEvent("userLogin", { detail: userData }));
       onLogin(email, "Usuário Local", "");
       onClose();
     }
@@ -38,6 +40,9 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
     e.preventDefault();
     if (email && name) {
       console.log("Registro:", { name, email, company, role, department, photo });
+      const userData = { email, name, picture: "" };
+      localStorage.setItem("user", JSON.stringify(userData));
+      window.dispatchEvent(new CustomEvent("userLogin", { detail: userData }));
       onLogin(email, name, "");
       onClose();
     }
@@ -47,7 +52,17 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
   if (credentialResponse.credential) {
     try {
-      const decoded: any = jwtDecode(credentialResponse.credential);
+      // Decode JWT payload without external library
+      const token = credentialResponse.credential;
+      const base64Url = token.split(".")[1] || "";
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      const decoded: any = JSON.parse(jsonPayload);
 
       const userData = {
         email: decoded.email,
@@ -87,6 +102,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Entrar</TabsTrigger>
             <TabsTrigger value="register">Registrar</TabsTrigger>
+            <TabsTrigger value="code">Entrar com Código</TabsTrigger>
           </TabsList>
 
           {/* LOGIN */}
@@ -139,6 +155,119 @@ const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
                 <div className="mt-4">
                   <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* LOGIN POR CÓDIGO */}
+          <TabsContent value="code">
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle>Entrar com código</CardTitle>
+                <CardDescription>Receba um código no email e use-o para entrar (simulado)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    // handled by sendCode/verifyCode buttons
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="code-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="code-email"
+                        type="email"
+                        placeholder="seu.email@accenture.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {!Boolean((localStorage.getItem("loginCodes") && JSON.parse(localStorage.getItem("loginCodes") || "{}")[email])) ? (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="gradient"
+                        className="flex-1"
+                        onClick={() => {
+                          if (!email) return alert("Informe um email");
+                          // generate 6-digit code
+                          const code = Math.floor(100000 + Math.random() * 900000).toString();
+                          const expires = Date.now() + 1000 * 60 * 10; // 10 min
+                          let map = {} as any;
+                          try { map = JSON.parse(localStorage.getItem("loginCodes") || "{}"); } catch(e) {}
+                          map[email] = { code, expires };
+                          localStorage.setItem("loginCodes", JSON.stringify(map));
+                          // in real app send email; here we show alert for dev
+                          alert("Código enviado (simulado): " + code);
+                          // trigger UI update by forcing rerender via state change
+                          setCodeSent(true);
+                        }}
+                      >
+                        Enviar Código
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="verify-code">Código</Label>
+                      <Input
+                        id="verify-code"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        placeholder="000000"
+                        className="pl-3"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="gradient"
+                          onClick={() => {
+                            if (!email) return alert("Informe um email");
+                            try {
+                              const map = JSON.parse(localStorage.getItem("loginCodes") || "{}");
+                              const entry = map[email];
+                              if (!entry) return alert("Nenhum código encontrado para esse email. Peça um novo código.");
+                              if (Date.now() > entry.expires) return alert("Código expirado. Peça um novo código.");
+                              if (verificationCode.trim() !== entry.code) return alert("Código inválido.");
+
+                              const userData = { email, name: "Usuário (código)", picture: "" };
+                              localStorage.setItem("user", JSON.stringify(userData));
+                              window.dispatchEvent(new CustomEvent("userLogin", { detail: userData }));
+                              onLogin(email, userData.name, "");
+                              onClose();
+                            } catch (e) {
+                              console.error(e);
+                              alert("Erro ao verificar código.");
+                            }
+                          }}
+                        >
+                          Verificar Código
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            // allow resending
+                            setVerificationCode("");
+                            setCodeSent(false);
+                            const map = JSON.parse(localStorage.getItem("loginCodes") || "{}");
+                            if (map[email]) {
+                              delete map[email];
+                              localStorage.setItem("loginCodes", JSON.stringify(map));
+                            }
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </form>
               </CardContent>
             </Card>
           </TabsContent>

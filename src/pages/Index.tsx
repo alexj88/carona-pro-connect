@@ -53,7 +53,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onLogin={() => setShowLogin(true)} isLoggedIn={true} />
+      <Header onLogin={() => setShowLogin(true)} isLoggedIn={false} />
       <Hero onGetStarted={() => setShowLogin(true)} />
 
       <LoginModal
