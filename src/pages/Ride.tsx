@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,11 @@ export default function Ride() {
   const [destination, setDestination] = useState("");
   const [rideData, setRideData] = useState<RideData | null>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Added useNavigate hook
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [currentCoordsState, setCurrentCoordsState] = useState<[number, number] | null>(null);
+  const [createdRideId, setCreatedRideId] = useState<string | null>(null);
+  const [createdSaved, setCreatedSaved] = useState(false);
 
   // Função para converter endereço em coordenadas (geocoding)
   const geocodeAddress = async (
@@ -47,7 +53,7 @@ export default function Ride() {
 
     try {
       // Faz o geocoding de ambos os endereços
-      const currentCoords = await geocodeAddress(currentLocation);
+      const currentCoords = currentCoordsState ?? (await geocodeAddress(currentLocation));
       const destinationCoords = await geocodeAddress(destination);
 
       if (currentCoords && destinationCoords) {
@@ -63,6 +69,47 @@ export default function Ride() {
           currentCoords,
           destinationCoords,
         });
+        // Persist created ride to localStorage so Map page can load it
+        try {
+          const newRideId = Date.now().toString();
+          const now = new Date();
+          const newRide = {
+            id: newRideId,
+            driverName: "Você",
+            from: currentLocation,
+            to: destination,
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: now.toLocaleDateString(),
+            availableSeats: 1,
+            totalSeats: 1,
+            rating: 5,
+            group: "Pessoal",
+            tags: [],
+            driverAvatar: "",
+            phone: "",
+            matchPercentage: 100,
+            sharedInterests: [],
+            coords: {
+              from: currentCoords,
+              to: destinationCoords,
+            },
+          } as any;
+
+          const existing = JSON.parse(localStorage.getItem("createdRides") || "[]");
+          existing.push(newRide);
+          localStorage.setItem("createdRides", JSON.stringify(existing));
+
+          // show visual confirmation and display route in the embedded map
+          setCreatedRideId(newRideId);
+          setCreatedSaved(true);
+          // scroll to map view
+          setTimeout(() => {
+            const el = document.getElementById("map-section");
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 200);
+        } catch (e) {
+          console.error("Erro ao salvar carona criada:", e);
+        }
       } else {
         alert(
           "Não foi possível encontrar um ou ambos os endereços. Tente novamente."
@@ -74,6 +121,38 @@ export default function Ride() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocalização não disponível no seu navegador.");
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setCurrentCoordsState([latitude, longitude]);
+
+        try {
+          const resp = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+          );
+          const json = await resp.json();
+          if (json && json.display_name) setCurrentLocation(json.display_name);
+          else setCurrentLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        } catch (e) {
+          setCurrentLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      (err) => {
+        setGeoLoading(false);
+        alert("Não foi possível obter a localização: " + err.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   return (
@@ -93,13 +172,18 @@ export default function Ride() {
                 {/* Campo de Local Atual */}
                 <div className="space-y-2">
                   <Label htmlFor="current-location">Local Atual</Label>
-                  <Input
-                    id="current-location"
-                    placeholder="Onde você está? (ex: Recife, PE)"
-                    value={currentLocation}
-                    onChange={(e) => setCurrentLocation(e.target.value)}
-                    required
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="current-location"
+                      placeholder="Onde você está? (ex: Recife, PE)"
+                      value={currentLocation}
+                      onChange={(e) => setCurrentLocation(e.target.value)}
+                      required
+                    />
+                    <Button type="button" variant="outline" onClick={useCurrentLocation} disabled={geoLoading}>
+                      {geoLoading ? "Buscando..." : "Usar localização atual"}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Campo de Destino */}
@@ -124,7 +208,7 @@ export default function Ride() {
               {rideData && (
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <h3 className="font-semibold text-blue-900 mb-2">
-                    Carona Criada!
+                    Dados da Carona
                   </h3>
                   <p className="text-sm text-blue-800">
                     <strong>De:</strong> {rideData.currentLocation}
@@ -132,6 +216,26 @@ export default function Ride() {
                   <p className="text-sm text-blue-800">
                     <strong>Para:</strong> {rideData.destination}
                   </p>
+                  {createdSaved && createdRideId && (
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        variant="gradient"
+                        onClick={() => navigate(`/map/${createdRideId}`)}
+                      >
+                        Abrir mapa completo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const url = `${window.location.origin}/map/${createdRideId}`;
+                          navigator.clipboard?.writeText(url);
+                          alert("Link copiado: " + url);
+                        }}
+                      >
+                        Copiar link
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </Card>
@@ -139,7 +243,7 @@ export default function Ride() {
         </div>
 
         {/* Mapa */}
-        <div className="lg:col-span-2">
+        <div id="map-section" className={`lg:col-span-2 h-[60vh] ${createdSaved ? 'ring-4 ring-emerald-200' : ''}`}>
           <MapView rideData={rideData} />
         </div>
       </div>

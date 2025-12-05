@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 interface HeaderProps {
   onLogin?: () => void;
@@ -24,6 +24,8 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
   const [status, setStatus] = useState<string>("Passageiro");
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   // Recupera dados do usuário do localStorage
   useEffect(() => {
@@ -86,46 +88,53 @@ const Header = ({ onLogin, onMenuClick, isLoggedIn = false }: HeaderProps) => {
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-6">
-          {user ? (
-            <Link to="/dashboard" className="text-foreground/80 hover:text-primary transition-colors">
+        {isHome ? (
+          <nav className="hidden md:flex items-center gap-2">
+            <Link
+              to={"/"}
+              className="px-3 py-2 rounded-md text-base md:text-lg text-foreground/80 hover:text-primary hover:bg-muted transition-colors"
+            >
               Início
             </Link>
-          ) : (
-            <Link to="/" className="text-foreground/80 hover:text-primary transition-colors">
-              Início
-            </Link>
-          )}
-        </nav>
 
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link
-            to="/"
-            className="text-foreground/80 hover:text-primary transition-colors"
-          >
-            Home
-          </Link>
-          
-          <Link
+            <Link
+              to="/about"
+              className="px-3 py-2 rounded-md text-base md:text-lg text-foreground/80 hover:text-primary hover:bg-muted transition-colors"
+            >
+              Sobre
+            </Link>
+          </nav>
+        ) : (
+          <nav className="hidden md:flex items-center gap-2">
+            <Link
+              to={user ? "/dashboard" : "/"}
+              className="px-3 py-2 rounded-md text-base md:text-lg text-foreground/80 hover:text-primary hover:bg-muted transition-colors"
+            >
+              Início
+            </Link>
+
+            <Link
               to="/dashboard"
-              className="text-foreground/80 hover:text-primary transition-colors"
+              className="px-3 py-2 rounded-md text-base md:text-lg text-foreground/80 hover:text-primary hover:bg-muted transition-colors"
             >
               Dashboard
             </Link>
-          
-          <Link
-            to="/ride"
-            className="text-foreground/80 hover:text-primary transition-colors"
-          >
-            Caronas
-          </Link>
-          <Link
-            to="/about"
-            className="text-foreground/80 hover:text-primary transition-colors"
-          >
-            Sobre
-          </Link>
-        </nav>
+
+            <Link
+              to="/ride"
+              className="px-3 py-2 rounded-md text-base md:text-lg text-foreground/80 hover:text-primary hover:bg-muted transition-colors"
+            >
+              Caronas
+            </Link>
+
+            <Link
+              to="/about"
+              className="px-3 py-2 rounded-md text-base md:text-lg text-foreground/80 hover:text-primary hover:bg-muted transition-colors"
+            >
+              Sobre
+            </Link>
+          </nav>
+        )}
 
         <div className="flex items-center space-x-3">
           {user ? (
