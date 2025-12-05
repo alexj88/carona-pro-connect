@@ -298,6 +298,22 @@ app.get('/api/corridas/passageiro/:id', async (req, res) => {
     }
 });
 
+app.get('/corridas', async (req, res) => {
+    try {
+        // VERIFIQUE SE ISTO ESTÁ CORRETO:
+        const result = await query('SELECT * FROM corridas'); 
+
+        // Certifique-se de que o nome da sua tabela no banco é EXATAMENTE 'corridas'
+        // E que a conexão 'db' está ativa.
+
+        return res.json(result.rows);
+    } catch (err) {
+        // ... (Seu código de catch)
+        console.error('ERRO FATAL NA BUSCA DE CORRIDAS:', err); // <-- LEIA ESTA MENSAGEM
+        return res.status(500).json({ error: 'Erro no servidor.',});
+    }
+});
+
 // Rota para buscar UMA Corrida por ID
 app.get('/api/corridas/:id', async (req, res) => {
     const corridaId = req.params.id;
